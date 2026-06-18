@@ -1,0 +1,2206 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Mercado ON — Compre e venda no seu bairro</title>
+<meta name="description" content="Encontre produtos e serviços perto de você. Marmitas, doces, roupas, beleza e muito mais no seu bairro.">
+<meta name="theme-color" content="#0D6E3F">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Mercado ON">
+
+<!-- Favicon -->
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<link rel="apple-touch-icon" href="icons/icon-192x192.png">
+<link rel="apple-touch-icon" sizes="152x152" href="icons/icon-152x152.png">
+<link rel="apple-touch-icon" sizes="192x192" href="icons/icon-192x192.png">
+
+<!-- PWA Manifest -->
+<link rel="manifest" href="manifest.json">
+
+<!-- Open Graph (WhatsApp, Facebook, Telegram) -->
+<meta property="og:type"        content="website">
+<meta property="og:site_name"   content="Mercado ON">
+<meta property="og:title"       content="Mercado ON — Compre e venda no seu bairro">
+<meta property="og:description" content="Encontre marmitas, doces, roupas, beleza e serviços perto de você. Anuncie grátis!">
+<meta property="og:image"       content="icons/icon-512x512.png">
+<meta property="og:image:width"  content="512">
+<meta property="og:image:height" content="512">
+<meta property="og:url"         content="https://SEU-PROJETO.web.app">
+<meta name="twitter:card"        content="summary_large_image">
+<meta name="twitter:title"       content="Mercado ON">
+<meta name="twitter:description" content="Compre e venda no seu bairro.">
+<meta name="twitter:image"       content="icons/icon-512x512.png">
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, deleteDoc, doc }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getStorage, ref, uploadString, getDownloadURL }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+
+  // ══════════════════════════════════════════
+  // ⚙️  SUBSTITUA PELAS SUAS CREDENCIAIS FIREBASE
+  // ══════════════════════════════════════════
+  const firebaseConfig = {
+    apiKey: "SUA_API_KEY",
+    authDomain: "SEU_PROJETO.firebaseapp.com",
+    projectId: "SEU_PROJETO",
+    storageBucket: "SEU_PROJETO.appspot.com",
+    messagingSenderId: "SEU_ID",
+    appId: "SEU_APP_ID"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db  = getFirestore(app);
+  const storage = getStorage(app);
+
+  window._fbReady = { db, storage, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, ref, uploadString, getDownloadURL, deleteDoc, doc };
+  document.dispatchEvent(new Event("fbReady"));
+</script>
+
+<style>
+  :root {
+    --verde:   #0D6E3F;
+    --verde2:  #094D2C;
+    --on:      #00E676;
+    --fundo:   #F3F6F4;
+    --card:    #FFFFFF;
+    --texto:   #111827;
+    --sub:     #4B5563;
+    --borda:   #D1D5DB;
+    --radius:  16px;
+    --shadow:  0 4px 20px rgba(0,0,0,0.07);
+  }
+
+  /* ── MODO ESCURO ── */
+  body.dark {
+    --fundo:  #0f1a14;
+    --card:   #1a2d1e;
+    --texto:  #f0fdf4;
+    --sub:    #9ca3af;
+    --borda:  #2d4a35;
+    --shadow: 0 4px 20px rgba(0,0,0,0.35);
+  }
+  body.dark header { box-shadow: 0 2px 12px rgba(0,0,0,.6); }
+  body.dark .chip  { background: var(--card); }
+  body.dark .search-wrap input { background: #1a2d1e; color: var(--texto); }
+  body.dark .modal, body.dark .modal-chave, body.dark .modal-compartilhar { background: #1a2d1e; }
+  body.dark .campo input, body.dark .campo textarea, body.dark .campo select { background: #0f1a14; color: var(--texto); border-color: var(--borda); }
+  body.dark .zap-row { background: #0f1a14; border-color: var(--borda); }
+  body.dark .zap-prefix { background: #1a2d1e; }
+  body.dark .logo-preview-box { background: #0f1a14; }
+  body.dark .foto-slot { background: #0f1a14; }
+  body.dark .btn-cancelar { color: var(--sub); border-color: var(--borda); }
+  body.dark .admin-card-item, body.dark .prioridade-item { background: #0f1a14; }
+  body.dark .prioridade-item.ativo-diario  { background: #2d1f00; }
+  body.dark .prioridade-item.ativo-semanal { background: #1a1040; }
+  body.dark .share-link-box { background: #0f1a14; border-color: var(--borda); }
+  body.dark .btn-destino { background: #0f1a14; border-color: var(--borda); }
+  body.dark .share-preview { border-color: var(--borda); background: #0f1a14; }
+  body.dark .share-preview-body { background: var(--card); }
+  body.dark .tag-cat { background: #0f2d1a; border-color: #1a4a28; }
+  body.dark .foto-placeholder { background: #1a2d1e; }
+
+  /* botão modo escuro */
+  .btn-dark {
+    background: transparent; border: none; cursor: pointer;
+    font-size: 1.2rem; color: rgba(255,255,255,.8);
+    width: 36px; height: 36px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    transition: background .15s;
+  }
+  .btn-dark:hover { background: rgba(255,255,255,.15); }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--fundo); color: var(--texto); min-height: 100vh; }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--verde);
+    padding: 0 16px;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 2px 12px rgba(13,110,63,.35);
+  }
+  .header-inner {
+    max-width: 700px; margin: 0 auto;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 60px; position: relative;
+  }
+
+  /* ── GATILHO OCULTO ADMIN ── */
+  .admin-trigger {
+    position: absolute;
+    top: 0; left: -16px;
+    width: 44px; height: 60px;
+    cursor: default;
+    -webkit-tap-highlight-color: transparent;
+    z-index: 10;
+  }
+
+  /* ── LOGO ── */
+  .logo {
+    font-size: 1.35rem; font-weight: 900; color: #fff;
+    letter-spacing: -1px; display: flex; align-items: center;
+    text-transform: uppercase; user-select: none;
+  }
+  .on-badge {
+    background: var(--on); color: var(--verde);
+    padding: 2px 7px; border-radius: 6px; margin-left: 5px;
+    font-size: 1rem; font-weight: 900;
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .on-dot {
+    width: 7px; height: 7px; background: var(--verde); border-radius: 50%;
+    animation: pulsar 1.4s ease-in-out infinite;
+  }
+  @keyframes pulsar { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.6);opacity:.55} }
+
+  .btn-anunciar {
+    background: var(--on); color: var(--verde);
+    border: none; border-radius: 30px; padding: 8px 18px;
+    font-weight: 700; font-size: .85rem; cursor: pointer;
+    transition: transform .15s, box-shadow .15s;
+  }
+  .btn-anunciar:hover { transform: scale(1.04); box-shadow: 0 4px 12px rgba(0,0,0,.15); }
+
+  /* ── HERO ── */
+  .hero {
+    background: linear-gradient(150deg,#0D6E3F 0%,#094D2C 60%,#062B1A 100%);
+    padding: 32px 16px 40px; text-align: center; color: #fff;
+  }
+  .hero h1 { font-size: 1.65rem; font-weight: 900; margin-bottom: 8px; line-height: 1.2; letter-spacing: -.5px; }
+  .hero p  { font-size: .95rem; opacity: .75; margin-bottom: 20px; }
+  .search-wrap { max-width: 480px; margin: 0 auto; }
+  .search-wrap input {
+    width: 100%; border: none; border-radius: 30px;
+    padding: 12px 20px; font-size: .95rem; outline: none;
+    box-shadow: 0 2px 10px rgba(0,0,0,.18);
+  }
+
+  /* ── CHIPS BAIRRO ── */
+  .bairros-wrap { max-width: 700px; margin: 0 auto; padding: 14px 16px 0; }
+  .bairros-scroll { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+  .bairros-scroll::-webkit-scrollbar { display: none; }
+  .chip {
+    white-space: nowrap; background: var(--card); border: 2px solid var(--borda);
+    border-radius: 20px; padding: 6px 14px; font-size: .82rem; font-weight: 600;
+    cursor: pointer; transition: all .15s; color: var(--sub);
+  }
+  .chip.ativo, .chip:hover { background: var(--verde); border-color: var(--verde); color: #fff; }
+
+  /* ── GRID ── */
+  .grid-section { max-width: 700px; margin: 0 auto; padding: 14px 16px 32px; }
+  .sec-titulo {
+    font-size: .78rem; font-weight: 700; margin-bottom: 12px;
+    color: var(--sub); text-transform: uppercase; letter-spacing: .5px;
+  }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(195px,1fr)); gap: 14px; }
+
+  /* ── CARD ── */
+  .card {
+    background: var(--card); border-radius: var(--radius);
+    box-shadow: var(--shadow); overflow: hidden; cursor: pointer;
+    transition: transform .18s, box-shadow .18s; position: relative;
+  }
+  .card:hover { transform: translateY(-4px); box-shadow: 0 8px 28px rgba(0,0,0,.13); }
+
+  /* logomarca no card */
+  .card-header-area {
+    position: relative; height: 140px; background: #eee; overflow: hidden;
+  }
+  .card-logo-overlay {
+    position: absolute; bottom: -18px; left: 12px; z-index: 5;
+    width: 44px; height: 44px; border-radius: 10px;
+    border: 2px solid #fff; background: #fff;
+    object-fit: cover; box-shadow: 0 2px 8px rgba(0,0,0,.18);
+    display: none;
+  }
+  .card-logo-overlay.visivel { display: block; }
+
+  .card-fotos { width: 100%; height: 100%; position: relative; }
+  .card-fotos img {
+    width: 100%; height: 100%; object-fit: cover;
+    display: none; position: absolute; top:0; left:0;
+  }
+  .card-fotos img.ativa { display: block; }
+  .foto-placeholder {
+    display: flex; align-items: center; justify-content: center;
+    height: 100%; font-size: 2.5rem; background: #F0FAF5;
+  }
+  .dots {
+    position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 4px; z-index: 4;
+  }
+  .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: rgba(255,255,255,.5); cursor: pointer; transition: background .2s;
+  }
+  .dot.ativa { background: #fff; }
+  .badge-bairro {
+    position: absolute; top: 8px; left: 8px;
+    background: rgba(0,0,0,.55); color: #fff;
+    font-size: .7rem; font-weight: 700;
+    padding: 3px 8px; border-radius: 10px; backdrop-filter: blur(4px); z-index: 4;
+  }
+
+  .card-body { padding: 14px 12px 12px; }
+  .card-nome {
+    font-weight: 700; font-size: .95rem;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    margin-bottom: 2px;
+  }
+  /* horário no card */
+  .card-horario {
+    font-size: .75rem; color: var(--sub); margin-bottom: 6px;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .status-aberto  { color: #16A34A; font-weight: 700; }
+  .status-fechado { color: #DC2626; font-weight: 700; }
+
+  .card-desc {
+    font-size: .82rem; color: var(--sub); margin-bottom: 10px;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .card-footer { display: flex; align-items: center; justify-content: space-between; }
+  .btn-zap {
+    display: flex; align-items: center; gap: 5px;
+    background: #25D366; color: #fff; border-radius: 20px;
+    padding: 6px 12px; font-size: .8rem; font-weight: 700;
+    text-decoration: none; transition: background .15s;
+  }
+  .btn-zap:hover { background: #1ebe5c; }
+  .tag-cat {
+    font-size: .72rem; background: #ECFDF5; color: var(--verde);
+    font-weight: 600; padding: 3px 8px; border-radius: 8px;
+    border: 1px solid #A7F3D0;
+  }
+
+  /* ── EMPTY / LOADING ── */
+  .empty { text-align: center; padding: 60px 20px; color: var(--sub); }
+  .empty .icon { font-size: 3rem; margin-bottom: 12px; }
+  .loading { text-align: center; padding: 40px; color: var(--sub); }
+  .spinner {
+    width: 36px; height: 36px;
+    border: 3px solid var(--borda); border-top-color: var(--verde);
+    border-radius: 50%; animation: spin .7s linear infinite; margin: 0 auto 12px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── OVERLAY / MODAL BASE ── */
+  .overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,.6); z-index: 200;
+    align-items: flex-end; justify-content: center;
+    backdrop-filter: blur(3px);
+  }
+  .overlay.aberto { display: flex; }
+  .modal {
+    background: var(--card); border-radius: 24px 24px 0 0;
+    width: 100%; max-width: 700px; max-height: 92vh;
+    overflow-y: auto; padding: 24px 20px 32px;
+    animation: slideUp .3s ease;
+  }
+  @keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+  .modal-handle { width: 40px; height: 4px; background: var(--borda); border-radius: 4px; margin: 0 auto 20px; }
+  .modal h2 { font-size: 1.2rem; font-weight: 800; margin-bottom: 18px; color: var(--verde); }
+
+  /* ── CAMPOS ── */
+  .campo { margin-bottom: 14px; }
+  .campo label {
+    display: block; font-size: .8rem; font-weight: 700;
+    color: var(--sub); margin-bottom: 5px;
+    text-transform: uppercase; letter-spacing: .4px;
+  }
+  .campo input, .campo textarea, .campo select {
+    width: 100%; border: 2px solid var(--borda); border-radius: 10px;
+    padding: 11px 14px; font-size: .95rem; font-family: inherit;
+    transition: border-color .15s; outline: none;
+    background: var(--fundo); color: var(--texto);
+  }
+  .campo input:focus, .campo textarea:focus, .campo select:focus { border-color: var(--verde); background: #fff; }
+  .campo textarea { resize: vertical; min-height: 80px; }
+
+  /* campo horário em linha */
+  .horario-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  /* zap prefix */
+  .zap-row {
+    display: flex; align-items: center;
+    border: 2px solid var(--borda); border-radius: 10px;
+    background: var(--fundo); overflow: hidden; transition: border-color .15s;
+  }
+  .zap-row:focus-within { border-color: var(--verde); background: #fff; }
+  .zap-prefix {
+    padding: 11px 10px 11px 14px; font-size: .95rem;
+    color: var(--sub); background: #ECFDF5; font-weight: 700; white-space: nowrap;
+  }
+  .zap-row input { border: none !important; background: transparent !important; flex: 1; padding: 11px 14px 11px 8px; }
+  .zap-row input:focus { outline: none; }
+
+  /* ── UPLOAD LOGOMARCA ── */
+  .logo-upload-area {
+    display: flex; align-items: center; gap: 14px; margin-top: 6px;
+  }
+  .logo-preview-box {
+    width: 72px; height: 72px; border-radius: 14px;
+    border: 2px dashed var(--borda); background: var(--fundo);
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden; cursor: pointer; flex-shrink: 0;
+    transition: border-color .15s; position: relative;
+  }
+  .logo-preview-box:hover { border-color: var(--verde); }
+  .logo-preview-box img { width: 100%; height: 100%; object-fit: cover; display: none; }
+  .logo-preview-box img.visivel { display: block; }
+  .logo-preview-box .logo-add-icon { font-size: 1.8rem; color: var(--borda); pointer-events: none; }
+  .logo-preview-box .logo-remover {
+    position: absolute; top: 3px; right: 3px;
+    background: rgba(0,0,0,.6); color: #fff; border: none;
+    border-radius: 50%; width: 20px; height: 20px;
+    font-size: .7rem; cursor: pointer; display: none;
+    align-items: center; justify-content: center;
+  }
+  .logo-preview-box.tem-logo .logo-remover { display: flex; }
+  .logo-preview-box.tem-logo .logo-add-icon { display: none; }
+  .logo-upload-hint { font-size: .82rem; color: var(--sub); line-height: 1.5; }
+
+  /* ── UPLOAD FOTOS ── */
+  .fotos-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-top: 6px; }
+  .foto-slot {
+    aspect-ratio: 1; border: 2px dashed var(--borda); border-radius: 10px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    cursor: pointer; overflow: hidden; position: relative;
+    background: var(--fundo); transition: border-color .15s;
+  }
+  .foto-slot:hover { border-color: var(--verde); }
+  .foto-slot img { width: 100%; height: 100%; object-fit: cover; position: absolute; top:0; left:0; }
+  .foto-slot .add-icon { font-size: 1.6rem; color: var(--borda); pointer-events: none; }
+  .foto-slot .remover {
+    position: absolute; top: 4px; right: 4px;
+    background: rgba(0,0,0,.6); color: #fff; border: none;
+    border-radius: 50%; width: 22px; height: 22px;
+    font-size: .75rem; cursor: pointer; display: none;
+    align-items: center; justify-content: center;
+  }
+  .foto-slot.tem-foto .remover { display: flex; }
+  .foto-slot.tem-foto .add-icon { display: none; }
+
+  /* ── BOTÕES MODAL ── */
+  .btn-salvar {
+    width: 100%; background: var(--verde); color: #fff; border: none;
+    border-radius: 14px; padding: 16px; font-size: 1rem; font-weight: 800;
+    cursor: pointer; margin-top: 8px; transition: background .15s, transform .1s;
+  }
+  .btn-salvar:hover { background: var(--verde2); transform: scale(1.01); }
+  .btn-salvar:disabled { background: #ccc; cursor: not-allowed; transform: none; }
+  .btn-cancelar {
+    width: 100%; background: transparent; color: var(--sub);
+    border: 2px solid var(--borda); border-radius: 14px;
+    padding: 13px; font-size: .95rem; font-weight: 600;
+    cursor: pointer; margin-top: 8px;
+  }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed; bottom: 24px; left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--texto); color: #fff; padding: 12px 24px;
+    border-radius: 30px; font-size: .9rem; font-weight: 600;
+    z-index: 999; transition: transform .3s ease; pointer-events: none;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* ── MODAL DETALHE ── */
+  .detalhe-header {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 14px;
+  }
+  .detalhe-logo {
+    width: 56px; height: 56px; border-radius: 12px;
+    object-fit: cover; border: 2px solid var(--borda); flex-shrink: 0;
+    display: none;
+  }
+  .detalhe-logo.visivel { display: block; }
+  .detalhe-fotos {
+    display: flex; gap: 6px; overflow-x: auto; margin-bottom: 14px;
+  }
+  .detalhe-fotos img { height: 180px; border-radius: 10px; object-fit: cover; flex-shrink: 0; }
+
+  /* ── MODAL ADMIN ── */
+  .admin-modal { max-height: 85vh; }
+  .admin-titulo {
+    font-size: 1rem; font-weight: 800; color: var(--sub);
+    text-transform: uppercase; letter-spacing: .5px;
+    margin: 18px 0 10px; border-top: 1px solid var(--borda); padding-top: 14px;
+  }
+  .admin-titulo:first-of-type { border-top: none; margin-top: 0; padding-top: 0; }
+  .admin-card-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px; background: var(--fundo); border-radius: 10px;
+    margin-bottom: 8px;
+  }
+  .admin-card-logo {
+    width: 40px; height: 40px; border-radius: 8px;
+    object-fit: cover; background: #e5e7eb; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem; overflow: hidden;
+  }
+  .admin-card-logo img { width: 100%; height: 100%; object-fit: cover; }
+  .admin-card-info { flex: 1; min-width: 0; }
+  .admin-card-info strong { display: block; font-size: .9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .admin-card-info span { font-size: .78rem; color: var(--sub); }
+  .btn-excluir {
+    background: #FEE2E2; color: #DC2626; border: none;
+    border-radius: 8px; padding: 6px 10px; font-size: .78rem;
+    font-weight: 700; cursor: pointer; flex-shrink: 0;
+    transition: background .15s;
+  }
+  .btn-excluir:hover { background: #FECACA; }
+
+  /* ── BADGE PRIORIDADE ── */
+  .badge-prioridade {
+    position: absolute; top: 8px; right: 8px;
+    background: linear-gradient(135deg, #F59E0B, #D97706);
+    color: #fff; font-size: .65rem; font-weight: 800;
+    padding: 3px 7px; border-radius: 10px;
+    display: flex; align-items: center; gap: 3px;
+    z-index: 5; box-shadow: 0 2px 6px rgba(217,119,6,.45);
+    text-transform: uppercase; letter-spacing: .3px;
+  }
+  .badge-prioridade.semanal {
+    background: linear-gradient(135deg, #8B5CF6, #7C3AED);
+    box-shadow: 0 2px 6px rgba(124,58,237,.45);
+  }
+  .card-prioritario {
+    border: 2px solid #F59E0B;
+    box-shadow: 0 4px 20px rgba(245,158,11,.2);
+  }
+  .card-prioritario.semanal {
+    border-color: #8B5CF6;
+    box-shadow: 0 4px 20px rgba(139,92,246,.2);
+  }
+
+  /* ── SEÇÃO PRIORIDADE ADMIN ── */
+  .prioridade-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px; background: var(--fundo); border-radius: 10px;
+    margin-bottom: 8px; border: 2px solid transparent;
+  }
+  .prioridade-item.ativo-diario  { border-color: #F59E0B; background: #FFFBEB; }
+  .prioridade-item.ativo-semanal { border-color: #8B5CF6; background: #F5F3FF; }
+  .prioridade-logo {
+    width: 40px; height: 40px; border-radius: 8px;
+    background: #e5e7eb; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem; overflow: hidden;
+  }
+  .prioridade-logo img { width: 100%; height: 100%; object-fit: cover; }
+  .prioridade-info { flex: 1; min-width: 0; }
+  .prioridade-info strong { display: block; font-size: .88rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .prioridade-info span { font-size: .75rem; color: var(--sub); }
+  .prioridade-controles { display: flex; flex-direction: column; gap: 4px; align-items: flex-end; }
+  .btn-prio-toggle {
+    font-size: .7rem; font-weight: 700; border: none; border-radius: 8px;
+    padding: 4px 8px; cursor: pointer; white-space: nowrap; transition: all .15s;
+  }
+  .btn-prio-diario  { background: #FEF3C7; color: #92400E; }
+  .btn-prio-diario.ativo  { background: #F59E0B; color: #fff; }
+  .btn-prio-semanal { background: #EDE9FE; color: #5B21B6; }
+  .btn-prio-semanal.ativo { background: #8B5CF6; color: #fff; }
+  .btn-prio-remover {
+    font-size: .68rem; color: #9CA3AF; background: none; border: none;
+    cursor: pointer; text-decoration: underline; padding: 0;
+  }
+  .prio-vencimento {
+    font-size: .68rem; font-weight: 700; margin-top: 2px;
+  }
+  .prio-vencimento.diario  { color: #D97706; }
+  .prio-vencimento.semanal { color: #7C3AED; }
+
+  /* ── MODAL COMPARTILHAR ── */
+  .overlay-compartilhar {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,.65); z-index: 600;
+    align-items: flex-end; justify-content: center;
+    backdrop-filter: blur(4px);
+  }
+  .overlay-compartilhar.aberto { display: flex; }
+  .modal-compartilhar {
+    background: var(--card); border-radius: 24px 24px 0 0;
+    width: 100%; max-width: 700px; max-height: 90vh;
+    overflow-y: auto; padding: 24px 20px 36px;
+    animation: slideUp .3s ease;
+  }
+  .modal-compartilhar h3 {
+    font-size: 1.05rem; font-weight: 800; color: var(--verde);
+    margin-bottom: 4px;
+  }
+  .modal-compartilhar .sub-share {
+    font-size: .82rem; color: var(--sub); margin-bottom: 16px;
+  }
+
+  /* preview do anúncio no modal */
+  .share-preview {
+    border-radius: 14px; overflow: hidden;
+    border: 2px solid var(--borda); margin-bottom: 20px;
+    background: var(--card);
+  }
+  .share-preview-img {
+    width: 100%; height: 180px; object-fit: cover;
+    display: block; background: #F0FAF5;
+  }
+  .share-preview-img-placeholder {
+    width: 100%; height: 180px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 3.5rem; background: #F0FAF5;
+  }
+  .share-preview-body {
+    padding: 12px 14px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .share-preview-logo {
+    width: 44px; height: 44px; border-radius: 9px;
+    object-fit: cover; flex-shrink: 0; border: 2px solid var(--borda);
+  }
+  .share-preview-info { flex: 1; min-width: 0; }
+  .share-preview-info strong {
+    display: block; font-size: .95rem; font-weight: 800;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .share-preview-info span {
+    font-size: .78rem; color: var(--sub);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    display: block;
+  }
+
+  /* botões de destino */
+  .share-destinos {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
+    margin-bottom: 14px;
+  }
+  .btn-destino {
+    display: flex; align-items: center; gap: 10px;
+    border: 2px solid var(--borda); border-radius: 14px;
+    padding: 13px 14px; background: var(--fundo);
+    cursor: pointer; transition: all .15s; text-align: left;
+    font-family: inherit;
+  }
+  .btn-destino:hover { transform: translateY(-2px); box-shadow: 0 4px 14px rgba(0,0,0,.1); }
+  .btn-destino .dest-icon {
+    font-size: 1.5rem; width: 36px; height: 36px;
+    border-radius: 10px; display: flex; align-items: center;
+    justify-content: center; flex-shrink: 0;
+  }
+  .btn-destino .dest-label { font-size: .83rem; font-weight: 700; color: var(--texto); }
+  .btn-destino .dest-sub   { font-size: .72rem; color: var(--sub); }
+  .btn-destino.wpp  { border-color: #25D366; }
+  .btn-destino.wpp:hover  { background: #F0FFF4; }
+  .btn-destino.wpp .dest-icon  { background: #25D366; }
+  .btn-destino.face { border-color: #1877F2; }
+  .btn-destino.face:hover { background: #EFF6FF; }
+  .btn-destino.face .dest-icon { background: #1877F2; }
+  .btn-destino.insta { border-color: #E1306C; }
+  .btn-destino.insta:hover { background: #FFF0F5; }
+  .btn-destino.insta .dest-icon { background: linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888); }
+  .btn-destino.tele { border-color: #229ED9; }
+  .btn-destino.tele:hover { background: #EFF9FF; }
+  .btn-destino.tele .dest-icon { background: #229ED9; }
+  .btn-destino.copiar { border-color: var(--verde); }
+  .btn-destino.copiar:hover { background: #F0FAF5; }
+  .btn-destino.copiar .dest-icon { background: var(--verde); }
+  .btn-destino.outros { border-color: #6B7280; }
+  .btn-destino.outros:hover { background: #F9FAFB; }
+  .btn-destino.outros .dest-icon { background: #6B7280; }
+
+  /* link copiável */
+  .share-link-box {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--fundo); border: 2px solid var(--borda);
+    border-radius: 12px; padding: 10px 12px; margin-bottom: 14px;
+  }
+  .share-link-box input {
+    flex: 1; border: none; background: transparent; font-size: .82rem;
+    color: var(--sub); outline: none; font-family: monospace;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .btn-copiar-link {
+    background: var(--verde); color: #fff; border: none;
+    border-radius: 8px; padding: 6px 12px; font-size: .78rem;
+    font-weight: 700; cursor: pointer; flex-shrink: 0;
+  }
+
+  /* btn compartilhar no card */
+  .btn-share-card {
+    position: absolute; bottom: 8px; right: 8px;
+    background: rgba(255,255,255,.9); border: none;
+    border-radius: 50%; width: 32px; height: 32px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: .95rem; z-index: 6;
+    box-shadow: 0 2px 8px rgba(0,0,0,.15);
+    transition: transform .15s, background .15s;
+  }
+  .btn-share-card:hover { transform: scale(1.1); background: #fff; }
+
+  /* btn compartilhar no detalhe */
+  .btn-share-detalhe {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; background: var(--fundo); color: var(--texto);
+    border: 2px solid var(--borda); border-radius: 14px;
+    padding: 13px 24px; font-size: .95rem; font-weight: 700;
+    cursor: pointer; margin-bottom: 10px; font-family: inherit;
+    transition: all .15s;
+  }
+  .btn-share-detalhe:hover { border-color: var(--verde); background: #F0FAF5; color: var(--verde); }
+
+  /* ── CHIPS CATEGORIA ── */
+  .categorias-wrap { max-width: 700px; margin: 0 auto; padding: 8px 16px 0; }
+  .cat-chip {
+    white-space: nowrap; background: var(--card); border: 2px solid var(--borda);
+    border-radius: 20px; padding: 5px 12px; font-size: .8rem; font-weight: 600;
+    cursor: pointer; transition: all .15s; color: var(--sub); display: inline-flex;
+    align-items: center; gap: 4px;
+  }
+  .cat-chip.ativo { background: var(--verde); border-color: var(--verde); color: #fff; }
+  .cat-chip:hover:not(.ativo) { border-color: var(--verde); color: var(--verde); }
+  .chip-aberto {
+    background: #DCFCE7 !important; border-color: #16A34A !important; color: #15803D !important;
+  }
+  body.dark .chip-aberto { background: #0d2e18 !important; color: #4ade80 !important; border-color: #166534 !important; }
+  .chip-aberto.ativo { background: #16A34A !important; border-color: #16A34A !important; color: #fff !important; }
+
+  /* ── VISUALIZAÇÕES ── */
+  .card-views {
+    font-size: .7rem; color: var(--sub); display: flex; align-items: center; gap: 3px;
+  }
+
+  /* ── AVALIAÇÕES ── */
+  .card-rating { display: flex; align-items: center; gap: 3px; font-size: .75rem; }
+  .stars { color: #F59E0B; letter-spacing: -1px; }
+  .rating-count { color: var(--sub); font-size: .7rem; }
+  .modal-avaliar { max-width: 400px; margin: 0 auto; }
+  .star-select { display: flex; gap: 8px; justify-content: center; margin: 12px 0; }
+  .star-btn {
+    font-size: 2rem; cursor: pointer; background: none; border: none;
+    transition: transform .15s; filter: grayscale(1); opacity: .4;
+  }
+  .star-btn.sel { filter: none; opacity: 1; transform: scale(1.15); }
+  .star-btn:hover { transform: scale(1.2); filter: none; opacity: .8; }
+
+  /* ── BADGE EXPIRAÇÃO ── */
+  .badge-expirando {
+    font-size: .68rem; font-weight: 700; color: #DC2626;
+    background: #FEE2E2; border-radius: 8px; padding: 2px 7px;
+    display: inline-block; margin-top: 2px;
+  }
+  .badge-expirado {
+    font-size: .68rem; font-weight: 700; color: #6B7280;
+    background: #F3F4F6; border-radius: 8px; padding: 2px 7px;
+    display: inline-block; margin-top: 2px;
+  }
+
+  /* ── MODAL PERFIL ── */
+  .overlay-perfil {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,.6); z-index: 300;
+    align-items: flex-end; justify-content: center;
+    backdrop-filter: blur(3px);
+  }
+  .overlay-perfil.aberto { display: flex; }
+  .modal-perfil {
+    background: var(--card); border-radius: 24px 24px 0 0;
+    width: 100%; max-width: 700px; max-height: 90vh;
+    overflow-y: auto; padding: 24px 20px 36px;
+    animation: slideUp .3s ease;
+  }
+  .perfil-header {
+    display: flex; align-items: center; gap: 14px; margin-bottom: 18px;
+  }
+  .perfil-logo {
+    width: 64px; height: 64px; border-radius: 14px;
+    object-fit: cover; border: 3px solid var(--borda); flex-shrink: 0;
+    background: var(--fundo); display: flex; align-items: center; justify-content: center;
+    font-size: 1.8rem; overflow: hidden;
+  }
+  .perfil-logo img { width: 100%; height: 100%; object-fit: cover; }
+  .perfil-nome { font-size: 1.15rem; font-weight: 900; margin-bottom: 2px; }
+  .perfil-meta { font-size: .82rem; color: var(--sub); }
+  .perfil-rating { display: flex; align-items: center; gap: 5px; margin-top: 4px; }
+  .perfil-anuncios-titulo {
+    font-size: .78rem; font-weight: 700; color: var(--sub);
+    text-transform: uppercase; letter-spacing: .5px; margin: 14px 0 10px;
+  }
+
+  /* ── BTN SOLICITAR VIA ZAP ── */
+  .btn-solicitar {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--verde); color: #fff; border: none;
+    border-radius: 14px; padding: 14px 20px; font-size: .95rem; font-weight: 700;
+    cursor: pointer; width: 100%; margin-bottom: 10px; font-family: inherit;
+    transition: background .15s; justify-content: center;
+  }
+  .btn-solicitar:hover { background: var(--verde2); }
+
+  /* ── MODAL AVALIAR ── */
+  .overlay-avaliar {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,.65); z-index: 700;
+    align-items: center; justify-content: center;
+    backdrop-filter: blur(4px);
+  }
+  .overlay-avaliar.aberto { display: flex; }
+  .modal-avaliar-box {
+    background: var(--card); border-radius: 20px;
+    padding: 28px 22px; width: 90%; max-width: 360px;
+    text-align: center; animation: zoomIn .25s ease;
+  }
+  .modal-avaliar-box h3 { font-size: 1.05rem; font-weight: 800; color: var(--verde); margin-bottom: 4px; }
+  .modal-avaliar-box p  { font-size: .85rem; color: var(--sub); margin-bottom: 4px; }
+
+  /* ── MODAL CHAVE ── */
+  .overlay-chave {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,.7); z-index: 500;
+    align-items: center; justify-content: center;
+    backdrop-filter: blur(4px);
+  }
+  .overlay-chave.aberto { display: flex; }
+  .modal-chave {
+    background: var(--card); border-radius: 20px;
+    padding: 28px 24px; width: 90%; max-width: 340px;
+    text-align: center; animation: zoomIn .25s ease;
+  }
+  @keyframes zoomIn { from{transform:scale(.85);opacity:0} to{transform:scale(1);opacity:1} }
+  .modal-chave .lock-icon { font-size: 2.5rem; margin-bottom: 10px; }
+  .modal-chave h3 { font-size: 1.1rem; font-weight: 800; margin-bottom: 6px; color: var(--verde); }
+  .modal-chave p  { font-size: .85rem; color: var(--sub); margin-bottom: 16px; }
+  .modal-chave input {
+    width: 100%; border: 2px solid var(--borda); border-radius: 10px;
+    padding: 12px 14px; font-size: 1rem; text-align: center;
+    letter-spacing: 2px; outline: none; margin-bottom: 12px;
+    transition: border-color .15s; font-family: inherit;
+  }
+  .modal-chave input:focus { border-color: var(--verde); }
+  .modal-chave input.erro { border-color: #DC2626; animation: shake .3s ease; }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+  .btn-confirmar-chave {
+    width: 100%; background: var(--verde); color: #fff; border: none;
+    border-radius: 12px; padding: 13px; font-size: 1rem; font-weight: 700;
+    cursor: pointer; margin-bottom: 8px;
+  }
+  .btn-fechar-chave {
+    width: 100%; background: transparent; color: var(--sub);
+    border: 2px solid var(--borda); border-radius: 12px;
+    padding: 11px; font-size: .9rem; cursor: pointer;
+  }
+
+  @media (max-width: 420px) {
+    .grid { grid-template-columns: 1fr 1fr; }
+    .hero h1 { font-size: 1.3rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="header-inner">
+    <div class="admin-trigger" id="adminTrigger" ondblclick="tentarAdmin()"></div>
+    <div class="logo">Mercado <span class="on-badge"><span class="on-dot"></span>ON</span></div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <button class="btn-dark" id="btnDark" onclick="toggleDark()" title="Modo escuro">🌙</button>
+      <button class="btn-anunciar" onclick="abrirModal()">+ Anunciar</button>
+    </div>
+  </div>
+</header>
+
+<!-- HERO -->
+<div class="hero">
+  <h1>O mercado do seu<br>bairro está <span style="color:var(--on)">ON</span> 🟢</h1>
+  <p>Compre e venda no seu bairro direto pelo WhatsApp</p>
+  <div class="search-wrap">
+    <input type="text" id="busca" placeholder="Buscar no Mercado ON…" oninput="filtrar()">
+  </div>
+</div>
+
+<!-- CHIPS BAIRRO -->
+<div class="bairros-wrap">
+  <div class="bairros-scroll" id="chipsBairros">
+    <div class="chip ativo" data-bairro="" onclick="selecionarBairro(this,'')">📍 Todos</div>
+  </div>
+</div>
+
+<!-- CHIPS CATEGORIA + ABERTO -->
+<div class="categorias-wrap">
+  <div class="bairros-scroll" id="chipsCategoria">
+    <div class="cat-chip ativo" onclick="selecionarCategoria(this,'')">🔍 Todas</div>
+    <div class="cat-chip chip-aberto" onclick="toggleAberto(this)">🟢 Aberto agora</div>
+    <div class="cat-chip" onclick="selecionarCategoria(this,'🍱')">🍱 Marmitas</div>
+    <div class="cat-chip" onclick="selecionarCategoria(this,'🍰')">🍰 Doces</div>
+    <div class="cat-chip" onclick="selecionarCategoria(this,'🥤')">🥤 Bebidas</div>
+    <div class="cat-chip" onclick="selecionarCategoria(this,'🧴')">🧴 Beleza</div>
+    <div class="cat-chip" onclick="selecionarCategoria(this,'👗')">👗 Roupas</div>
+    <div class="cat-chip" onclick="selecionarCategoria(this,'🔧')">🔧 Serviços</div>
+    <div class="cat-chip" onclick="selecionarCategoria(this,'📦')">📦 Outros</div>
+  </div>
+</div>
+
+<!-- BANNER SOLICITAR ANUNCIO -->
+<div style="max-width:700px;margin:10px auto 0;padding:0 16px">
+  <div onclick="abrirModalDestaque()" style="display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#D97706,#F59E0B);border-radius:14px;padding:12px 16px;cursor:pointer;color:#fff">
+    <div style="font-size:1.5rem;flex-shrink:0">⭐</div>
+    <div style="flex:1">
+      <div style="font-weight:800;font-size:.9rem">Coloque seu anúncio em destaque!</div>
+      <div style="font-size:.78rem;opacity:.9">Apareça em primeiro e receba mais clientes todos os dias.</div>
+    </div>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.8)" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+  </div>
+</div>
+
+<!-- GRID -->
+<div class="grid-section">
+  <div class="sec-titulo" id="tituloSec">Anúncios do bairro</div>
+  <div id="listaCards">
+    <div class="loading"><div class="spinner"></div><p>Carregando anúncios…</p></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- ══ MODAL CADASTRO ══ -->
+<div class="overlay" id="overlay" onclick="fecharSeClicarFora(event)">
+  <div class="modal" id="modal">
+    <div class="modal-handle"></div>
+    <h2>📦 Anunciar no Mercado ON</h2>
+
+    <div class="campo">
+      <label>Nome da loja / vendedor *</label>
+      <input type="text" id="nome" placeholder="Ex: Dona Maria Quitutes" maxlength="50">
+    </div>
+
+    <div class="campo">
+      <label>Logomarca da loja</label>
+      <div class="logo-upload-area">
+        <div class="logo-preview-box" id="logoBox" onclick="clicarLogo()">
+          <span class="logo-add-icon">🏪</span>
+          <img id="logoPrev" src="">
+          <button class="logo-remover" onclick="removerLogo(event)">✕</button>
+        </div>
+        <div class="logo-upload-hint">
+          Adicione a logo ou foto da sua loja.<br>
+          <small style="color:#9CA3AF">Aparece no card e no perfil.</small>
+        </div>
+      </div>
+      <input type="file" id="logoInput" accept="image/*" style="display:none" onchange="onLogoSelecionada(event)">
+    </div>
+
+    <div class="campo">
+      <label>Categoria *</label>
+      <select id="categoria">
+        <option value="">Selecione…</option>
+        <option>🍱 Marmitas e refeições</option>
+        <option>🍰 Bolos e doces</option>
+        <option>🥤 Bebidas</option>
+        <option>🧴 Cosméticos e beleza</option>
+        <option>👗 Roupas e acessórios</option>
+        <option>🔧 Serviços e reparos</option>
+        <option>📦 Outros produtos</option>
+      </select>
+    </div>
+
+    <div class="campo">
+      <label>Bairro *</label>
+      <input type="text" id="bairro" placeholder="Ex: Compensa, Alvorada, São José…" maxlength="40">
+    </div>
+
+    <div class="campo">
+      <label>Horário de funcionamento *</label>
+      <div class="horario-row">
+        <div>
+          <label style="font-size:.75rem;color:#9CA3AF;text-transform:none;letter-spacing:0;margin-bottom:4px">Abre às</label>
+          <input type="time" id="horaAbre">
+        </div>
+        <div>
+          <label style="font-size:.75rem;color:#9CA3AF;text-transform:none;letter-spacing:0;margin-bottom:4px">Fecha às</label>
+          <input type="time" id="horaFecha">
+        </div>
+      </div>
+    </div>
+
+    <div class="campo">
+      <label>O que você vende? *</label>
+      <textarea id="descricao" placeholder="Descreva seus produtos, preços, condições de entrega…" maxlength="300"></textarea>
+    </div>
+
+    <div class="campo">
+      <label>WhatsApp *</label>
+      <div class="zap-row">
+        <span class="zap-prefix">+55</span>
+        <input type="tel" id="whatsapp" placeholder="92999990000" maxlength="15">
+      </div>
+    </div>
+
+    <div class="campo">
+      <label>Fotos dos produtos (até 3)</label>
+      <div class="fotos-grid">
+        <div class="foto-slot" id="slot0" onclick="clicarFoto(0)">
+          <span class="add-icon">📷</span>
+          <img id="prev0" src="">
+          <button class="remover" onclick="removerFoto(event,0)">✕</button>
+        </div>
+        <div class="foto-slot" id="slot1" onclick="clicarFoto(1)">
+          <span class="add-icon">📷</span>
+          <img id="prev1" src="">
+          <button class="remover" onclick="removerFoto(event,1)">✕</button>
+        </div>
+        <div class="foto-slot" id="slot2" onclick="clicarFoto(2)">
+          <span class="add-icon">📷</span>
+          <img id="prev2" src="">
+          <button class="remover" onclick="removerFoto(event,2)">✕</button>
+        </div>
+      </div>
+      <input type="file" id="fileInput" accept="image/*" style="display:none" onchange="onFotoSelecionada(event)">
+    </div>
+
+    <button class="btn-salvar" id="btnSalvar" onclick="salvar()">Publicar anúncio</button>
+    <button class="btn-cancelar" onclick="fecharModal()">Cancelar</button>
+  </div>
+</div>
+
+<!-- ══ MODAL DETALHE ══ -->
+<div class="overlay" id="overlayDetalhe" onclick="fecharDetalheSeClicarFora(event)">
+  <div class="modal" id="modalDetalhe">
+    <div class="modal-handle"></div>
+    <div id="detalheConteudo"></div>
+    <button class="btn-cancelar" style="margin-top:4px" onclick="fecharDetalhe()">Fechar</button>
+  </div>
+</div>
+
+<!-- ══ MODAL PERFIL DO VENDEDOR ══ -->
+<div class="overlay-perfil" id="overlayPerfil" onclick="fecharPerfilFora(event)">
+  <div class="modal-perfil">
+    <div class="modal-handle"></div>
+    <div id="perfilConteudo"></div>
+    <button class="btn-cancelar" style="margin-top:8px" onclick="fecharPerfil()">Fechar</button>
+  </div>
+</div>
+
+<!-- ══ MODAL AVALIAÇÃO ══ -->
+<div class="overlay-avaliar" id="overlayAvaliar">
+  <div class="modal-avaliar-box">
+    <div style="font-size:2.2rem;margin-bottom:8px">⭐</div>
+    <h3>Avaliar anúncio</h3>
+    <p id="avaliarNome" style="font-weight:700;color:var(--texto);margin-bottom:2px"></p>
+    <p>Como foi sua experiência?</p>
+    <div class="star-select" id="starSelect">
+      <button class="star-btn" data-v="1" onclick="selecionarEstrela(1)">⭐</button>
+      <button class="star-btn" data-v="2" onclick="selecionarEstrela(2)">⭐</button>
+      <button class="star-btn" data-v="3" onclick="selecionarEstrela(3)">⭐</button>
+      <button class="star-btn" data-v="4" onclick="selecionarEstrela(4)">⭐</button>
+      <button class="star-btn" data-v="5" onclick="selecionarEstrela(5)">⭐</button>
+    </div>
+    <textarea id="avaliarComentario" placeholder="Comentário opcional…" maxlength="200"
+      style="width:100%;border:2px solid var(--borda);border-radius:10px;padding:10px;font-size:.9rem;font-family:inherit;resize:none;min-height:70px;background:var(--fundo);color:var(--texto);outline:none;margin-bottom:12px"></textarea>
+    <button class="btn-salvar" style="margin-top:0" onclick="enviarAvaliacao()">Enviar avaliação</button>
+    <button class="btn-cancelar" style="margin-top:8px" onclick="fecharAvaliar()">Cancelar</button>
+  </div>
+</div>
+
+<!-- ══ OVERLAY PALAVRA-CHAVE ADMIN ══ -->
+<div class="overlay-chave" id="overlayChave">
+  <div class="modal-chave">
+    <div class="lock-icon">🔐</div>
+    <h3>Área Restrita</h3>
+    <p>Digite a palavra-chave para acessar o painel administrativo.</p>
+    <input type="password" id="inputChave" placeholder="••••••••"
+      onkeydown="if(event.key==='Enter')confirmarChave()">
+    <button class="btn-confirmar-chave" onclick="confirmarChave()">Entrar</button>
+    <button class="btn-fechar-chave" onclick="fecharChave()">Cancelar</button>
+  </div>
+</div>
+
+<!-- ══ MODAL ADMIN PAINEL ══ -->
+<div class="overlay" id="overlayAdmin" onclick="fecharAdminSeClicarFora(event)">
+  <div class="modal admin-modal" id="modalAdmin">
+    <div class="modal-handle"></div>
+    <h2>⚙️ Painel Administrativo</h2>
+
+    <div class="admin-titulo">Resumo</div>
+    <div id="adminResumo" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:4px"></div>
+
+    <div class="admin-titulo">⭐ Anúncios em Destaque (Prioridade)</div>
+    <div id="adminPrioridadeLista"></div>
+    <p id="adminPrioridadeVazio" style="font-size:.82rem;color:var(--sub);display:none">Nenhum anúncio com prioridade ativada.</p>
+
+    <div class="admin-titulo">Anúncios cadastrados</div>
+    <div id="adminLista"></div>
+
+    <button class="btn-cancelar" style="margin-top:8px" onclick="fecharAdmin()">Fechar painel</button>
+  </div>
+</div>
+
+<!-- ══ MODAL DESTAQUE ══ -->
+<div class="overlay-avaliar" id="overlayDestaque">
+  <div class="modal-avaliar-box" style="max-width:380px">
+    <div style="font-size:2.2rem;margin-bottom:6px">⭐</div>
+    <h3 style="margin-bottom:4px">Anúncio em Destaque</h3>
+    <p style="font-size:.83rem;color:var(--sub);margin-bottom:16px">Seu anúncio aparece em <strong>primeiro lugar</strong> para todo mundo que abrir o app!</p>
+
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:18px">
+      <div onclick="escolherPlanoDestaque('diario')" id="planoDiario"
+        style="border:2px solid #F59E0B;border-radius:14px;padding:14px;cursor:pointer;text-align:left;background:#FFFBEB;transition:all .15s">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div>
+            <div style="font-weight:800;font-size:.95rem;color:#92400E">☀️ Destaque Diário</div>
+            <div style="font-size:.78rem;color:#A16207;margin-top:2px">Fica em 1º lugar por 24 horas</div>
+          </div>
+          <div style="font-weight:900;font-size:1.1rem;color:#D97706">R$ 5</div>
+        </div>
+      </div>
+
+      <div onclick="escolherPlanoDestaque('semanal')" id="planoSemanal"
+        style="border:2px solid #8B5CF6;border-radius:14px;padding:14px;cursor:pointer;text-align:left;background:#F5F3FF;transition:all .15s">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div>
+            <div style="font-weight:800;font-size:.95rem;color:#5B21B6">📅 Destaque Semanal</div>
+            <div style="font-size:.78rem;color:#6D28D9;margin-top:2px">Fica em 1º lugar por 7 dias</div>
+          </div>
+          <div>
+            <div style="font-weight:900;font-size:1.1rem;color:#8B5CF6">R$ 25</div>
+            <div style="font-size:.68rem;color:#8B5CF6;text-align:right">Economize R$10</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="background:var(--fundo);border-radius:10px;padding:10px 12px;font-size:.8rem;color:var(--sub);margin-bottom:16px;text-align:left">
+      💬 Após escolher, você será direcionado ao WhatsApp para combinar o pagamento. Assim que confirmado, ativo o destaque!
+    </div>
+
+    <button class="btn-salvar" style="margin-top:0" onclick="solicitarDestaque()">Quero o destaque! 🚀</button>
+    <button class="btn-cancelar" style="margin-top:8px" onclick="fecharModalDestaque()">Agora não</button>
+  </div>
+</div>
+
+<!-- ══ MODAL COMPARTILHAR ══ -->
+<div class="overlay-compartilhar" id="overlayCompartilhar" onclick="fecharCompartilharFora(event)">
+  <div class="modal-compartilhar">
+    <div class="modal-handle"></div>
+    <h3>📤 Compartilhar anúncio</h3>
+    <p class="sub-share">Divulgue em grupos e redes sociais</p>
+
+    <!-- preview -->
+    <div class="share-preview" id="sharePreview"></div>
+
+    <!-- link copiável -->
+    <div class="share-link-box">
+      <input type="text" id="shareLinkInput" readonly>
+      <button class="btn-copiar-link" onclick="copiarLink()">Copiar</button>
+    </div>
+
+    <!-- destinos -->
+    <div class="share-destinos">
+      <button class="btn-destino wpp" onclick="compartilharWpp()">
+        <div class="dest-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        </div>
+        <div><div class="dest-label">WhatsApp</div><div class="dest-sub">Grupos e contatos</div></div>
+      </button>
+
+      <button class="btn-destino face" onclick="compartilharFacebook()">
+        <div class="dest-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+        </div>
+        <div><div class="dest-label">Facebook</div><div class="dest-sub">Feed e grupos</div></div>
+      </button>
+
+      <button class="btn-destino insta" onclick="compartilharInstagram()">
+        <div class="dest-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+        </div>
+        <div><div class="dest-label">Instagram</div><div class="dest-sub">Stories e feed</div></div>
+      </button>
+
+      <button class="btn-destino tele" onclick="compartilharTelegram()">
+        <div class="dest-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.96 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+        </div>
+        <div><div class="dest-label">Telegram</div><div class="dest-sub">Grupos e canais</div></div>
+      </button>
+
+      <button class="btn-destino copiar" onclick="copiarTextoCompleto()">
+        <div class="dest-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+        </div>
+        <div><div class="dest-label">Copiar texto</div><div class="dest-sub">Para colar em qualquer lugar</div></div>
+      </button>
+
+      <button class="btn-destino outros" onclick="compartilharNativo()">
+        <div class="dest-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/></svg>
+        </div>
+        <div><div class="dest-label">Mais opções</div><div class="dest-sub">Outros apps do celular</div></div>
+      </button>
+    </div>
+
+    <button class="btn-cancelar" onclick="fecharCompartilhar()">Fechar</button>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+// ESTADO GLOBAL
+// ══════════════════════════════════════════════
+let todosAnuncios = [];
+let prioridades   = {};
+let avaliacoes    = {}; // { [anuncioId]: { total, count, media } }
+let visualizacoes = {}; // { [anuncioId]: number }
+let bairroAtivo   = '';
+let categoriaAtiva = '';
+let somenteAberto  = false;
+let slotAtual     = 0;
+let fotos         = [null, null, null];
+let logoBase64    = null;
+let fb            = null;
+let modoEscuro    = localStorage.getItem('darkMode') === '1';
+let estrelasSel   = 0;
+let anuncioAvaliar = null;
+
+// aplicar dark na carga
+if (modoEscuro) { document.body.classList.add('dark'); document.getElementById('btnDark').textContent = '☀️'; }
+
+// ══════════════════════════════════════════════
+// FIREBASE
+// ══════════════════════════════════════════════
+document.addEventListener('fbReady', () => {
+  fb = window._fbReady;
+  escutar();
+  escutarPrioridades();
+  escutarAvaliacoes();
+  escutarVisualizacoes();
+});
+
+function escutar() {
+  const q = fb.query(fb.collection(fb.db, 'anuncios'), fb.orderBy('criadoEm', 'desc'));
+  fb.onSnapshot(q, snap => {
+    todosAnuncios = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    atualizarChipsBairros();
+    renderizar();
+  }, () => mostrarDemoData());
+}
+
+function escutarPrioridades() {
+  try {
+    fb.onSnapshot(fb.collection(fb.db, 'prioridades'), snap => {
+      prioridades = {};
+      snap.docs.forEach(d => { prioridades[d.id] = d.data(); });
+      renderizar();
+    });
+  } catch(e) {}
+}
+
+function escutarAvaliacoes() {
+  try {
+    fb.onSnapshot(fb.collection(fb.db, 'avaliacoes'), snap => {
+      avaliacoes = {};
+      snap.docs.forEach(d => {
+        const dados = d.data();
+        if (!avaliacoes[dados.anuncioId]) avaliacoes[dados.anuncioId] = { total: 0, count: 0 };
+        avaliacoes[dados.anuncioId].total += dados.nota;
+        avaliacoes[dados.anuncioId].count += 1;
+        avaliacoes[dados.anuncioId].media = avaliacoes[dados.anuncioId].total / avaliacoes[dados.anuncioId].count;
+      });
+      renderizar();
+    });
+  } catch(e) {}
+}
+
+function escutarVisualizacoes() {
+  try {
+    fb.onSnapshot(fb.collection(fb.db, 'visualizacoes'), snap => {
+      visualizacoes = {};
+      snap.docs.forEach(d => { visualizacoes[d.id] = d.data().count || 0; });
+      renderizar();
+    });
+  } catch(e) {}
+}
+
+// ══════════════════════════════════════════════
+// DEMO DATA
+// ══════════════════════════════════════════════
+function mostrarDemoData() {
+  const agora = Date.now();
+  todosAnuncios = [
+    { id:'d1', nome:'Marmitas da Cida', categoria:'🍱 Marmitas e refeições', bairro:'Compensa',
+      descricao:'Marmitas caseiras todos os dias. Frango, carne, peixe. A partir de R$15.',
+      whatsapp:'92999990001', horaAbre:'10:00', horaFecha:'20:00',
+      fotos:['https://placehold.co/300x200/00A86B/fff?text=Marmita'],
+      logo:'https://placehold.co/80x80/0D6E3F/fff?text=MC',
+      criadoEm: { toMillis: () => agora - 5*24*60*60*1000 } },
+    { id:'d2', nome:'Bolos da Manu', categoria:'🍰 Bolos e doces', bairro:'Alvorada',
+      descricao:'Bolos decorados, brigadeiros e docinhos para festas.',
+      whatsapp:'92999990002', horaAbre:'08:00', horaFecha:'18:00',
+      fotos:['https://placehold.co/300x200/FFD000/333?text=Bolo'],
+      logo:'', criadoEm: { toMillis: () => agora - 28*24*60*60*1000 } },
+    { id:'d3', nome:'Estética da Ju', categoria:'🧴 Cosméticos e beleza', bairro:'Compensa',
+      descricao:'Hidratação, escova, manicure. Atendo em domicílio também!',
+      whatsapp:'92999990003', horaAbre:'09:00', horaFecha:'19:00',
+      fotos:[], logo:'', criadoEm: { toMillis: () => agora - 2*24*60*60*1000 } },
+    { id:'d4', nome:'Roupas Estilo Top', categoria:'👗 Roupas e acessórios', bairro:'São José',
+      descricao:'Roupas femininas P ao GG. Novidades toda semana.',
+      whatsapp:'92999990004', horaAbre:'08:00', horaFecha:'22:00',
+      fotos:['https://placehold.co/300x200/FF6B35/fff?text=Moda'],
+      logo:'https://placehold.co/80x80/FF6B35/fff?text=RT',
+      criadoEm: { toMillis: () => agora - 10*24*60*60*1000 } },
+  ];
+  visualizacoes = { d1: 47, d2: 12, d3: 8, d4: 31 };
+  avaliacoes = {
+    d1: { total: 23, count: 5, media: 4.6 },
+    d4: { total: 9, count: 2, media: 4.5 },
+  };
+  atualizarChipsBairros();
+  renderizar();
+}
+
+// ══════════════════════════════════════════════
+// STATUS HORÁRIO
+// ══════════════════════════════════════════════
+function calcularStatus(horaAbre, horaFecha) {
+  if (!horaAbre || !horaFecha) return null;
+  const agora = new Date();
+  const [ha, ma] = horaAbre.split(':').map(Number);
+  const [hf, mf] = horaFecha.split(':').map(Number);
+  const minAgora = agora.getHours() * 60 + agora.getMinutes();
+  const minAbre  = ha * 60 + ma;
+  const minFecha = hf * 60 + mf;
+  const aberto = minFecha > minAbre
+    ? (minAgora >= minAbre && minAgora < minFecha)
+    : (minAgora >= minAbre || minAgora < minFecha);
+  return aberto;
+}
+
+function fmtHora(h) {
+  if (!h) return '';
+  const [hr, mn] = h.split(':');
+  return `${hr}h${mn !== '00' ? mn : ''}`;
+}
+
+function horarioHTML(a) {
+  if (!a.horaAbre || !a.horaFecha) return '';
+  const aberto = calcularStatus(a.horaAbre, a.horaFecha);
+  const status = aberto
+    ? `<span class="status-aberto">● Aberto agora</span>`
+    : `<span class="status-fechado">● Fechado</span>`;
+  return `<div class="card-horario">${status} &nbsp;${fmtHora(a.horaAbre)}–${fmtHora(a.horaFecha)}</div>`;
+}
+
+// ══════════════════════════════════════════════
+// CHIPS BAIRRO
+// ══════════════════════════════════════════════
+function atualizarChipsBairros() {
+  const bairros = [...new Set(todosAnuncios.map(a=>a.bairro).filter(Boolean))].sort();
+  const wrap = document.getElementById('chipsBairros');
+  wrap.innerHTML = `<div class="chip ${!bairroAtivo?'ativo':''}" onclick="selecionarBairro(this,'')">📍 Todos</div>`;
+  bairros.forEach(b => {
+    const el = document.createElement('div');
+    el.className = 'chip' + (bairroAtivo===b?' ativo':'');
+    el.onclick = () => selecionarBairro(el, b);
+    el.textContent = b;
+    wrap.appendChild(el);
+  });
+}
+function selecionarBairro(el, b) {
+  bairroAtivo = b;
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('ativo'));
+  el.classList.add('ativo');
+  renderizar();
+}
+
+function filtrar() { renderizar(); }
+
+function selecionarCategoria(el, cat) {
+  categoriaAtiva = cat;
+  document.querySelectorAll('.cat-chip:not(.chip-aberto)').forEach(c => c.classList.remove('ativo'));
+  el.classList.add('ativo');
+  renderizar();
+}
+
+function toggleAberto(el) {
+  somenteAberto = !somenteAberto;
+  el.classList.toggle('ativo', somenteAberto);
+  renderizar();
+}
+
+function diasRestantes(a) {
+  if (!a.criadoEm) return null;
+  const criado = typeof a.criadoEm.toMillis === 'function' ? a.criadoEm.toMillis() : (a.criadoEm.seconds ? a.criadoEm.seconds*1000 : null);
+  if (!criado) return null;
+  const valMs = 30 * 24 * 60 * 60 * 1000;
+  const diff = Math.ceil((criado + valMs - Date.now()) / 86400000);
+  return diff;
+}
+
+function renderizar() {
+  const busca = (document.getElementById('busca').value||'').toLowerCase();
+  let lista = todosAnuncios.filter(a => {
+    const mb = !bairroAtivo || a.bairro === bairroAtivo;
+    const mc = !categoriaAtiva || (a.categoria||'').startsWith(categoriaAtiva);
+    const ma = !somenteAberto || calcularStatus(a.horaAbre, a.horaFecha) === true;
+    const ms = !busca
+      || a.nome.toLowerCase().includes(busca)
+      || (a.descricao||'').toLowerCase().includes(busca)
+      || (a.categoria||'').toLowerCase().includes(busca);
+    return mb && mc && ma && ms;
+  });
+
+  const agora = Date.now();
+  lista.sort((a, b) => {
+    const pa = prioridadeValida(a.id, agora);
+    const pb = prioridadeValida(b.id, agora);
+    if (pa && !pb) return -1;
+    if (!pa && pb) return 1;
+    return 0;
+  });
+
+  const filtroDesc = [
+    bairroAtivo ? `📍 ${bairroAtivo}` : '',
+    categoriaAtiva ? categoriaAtiva : '',
+    somenteAberto ? '🟢 Aberto' : ''
+  ].filter(Boolean).join(' · ');
+
+  document.getElementById('tituloSec').textContent =
+    filtroDesc
+      ? `${filtroDesc} — ${lista.length} anúncio${lista.length!==1?'s':''}`
+      : `Todos os bairros — ${lista.length} anúncio${lista.length!==1?'s':''}`;
+
+  const wrap = document.getElementById('listaCards');
+  if (!lista.length) {
+    wrap.innerHTML = `<div class="empty"><div class="icon">🔍</div><p>Nenhum anúncio encontrado.<br>Seja o primeiro do Mercado ON no seu bairro!</p></div>`;
+    return;
+  }
+  wrap.innerHTML = `<div class="grid">${lista.map(cardHTML).join('')}</div>`;
+}
+
+function prioridadeValida(id, agora) {
+  const p = prioridades[id];
+  if (!p || !p.ativadoEm) return false;
+  const ms = p.tipo === 'semanal' ? 7*24*60*60*1000 : 24*60*60*1000;
+  return (agora - p.ativadoEm) < ms;
+}
+
+function starsHTML(media, count) {
+  if (!count) return '';
+  const cheia = Math.round(media);
+  const s = '⭐'.repeat(cheia) + '☆'.repeat(5 - cheia);
+  return `<div class="card-rating"><span class="stars" style="font-size:.75rem">${s}</span><span class="rating-count">${media.toFixed(1)} (${count})</span></div>`;
+}
+
+function cardHTML(a) {
+  const fts = (a.fotos||[]).filter(Boolean);
+  const fotosInner = fts.length
+    ? fts.map((f,i)=>`<img src="${f}" class="${i===0?'ativa':''}">`).join('')
+    : `<div class="foto-placeholder">🛒</div>`;
+  const dotsInner = fts.length > 1
+    ? `<div class="dots">${fts.map((_,i)=>`<div class="dot ${i===0?'ativa':''}" onclick="trocarFotoCard(event,this.parentElement,${i})"></div>`).join('')}</div>`
+    : '';
+  const logoImg = a.logo
+    ? `<img class="card-logo-overlay visivel" src="${a.logo}" alt="logo">`
+    : '';
+  const num = (a.whatsapp||'').replace(/\D/g,'');
+  const zapURL = `https://wa.me/55${num}?text=Oi!+Vi+seu+anúncio+no+Mercado+ON+e+tenho+interesse+😊`;
+
+  // Badge prioridade
+  const agora = Date.now();
+  const p = prioridades[a.id];
+  const pValida = prioridadeValida(a.id, agora);
+  let badgePrio = '';
+  let classePrio = '';
+  if (pValida) {
+    const isSemanal = p.tipo === 'semanal';
+    badgePrio = `<div class="badge-prioridade${isSemanal?' semanal':''}">⭐ ${isSemanal?'Destaque Semana':'Em Destaque'}</div>`;
+    classePrio = `card-prioritario${isSemanal?' semanal':''}`;
+  }
+
+  // Views
+  const views = visualizacoes[a.id] || 0;
+  const viewsHTML = views > 0 ? `<span class="card-views"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>${views}</span>` : '';
+
+  // Rating
+  const av = avaliacoes[a.id];
+  const ratingHTML = av ? starsHTML(av.media, av.count) : '';
+
+  // Validade
+  const dias = diasRestantes(a);
+  let validadeHTML = '';
+  if (dias !== null) {
+    if (dias <= 0) validadeHTML = `<span class="badge-expirado">⏸ Expirado</span>`;
+    else if (dias <= 5) validadeHTML = `<span class="badge-expirando">⚠️ Expira em ${dias}d</span>`;
+  }
+
+  return `
+  <div class="card ${classePrio}" onclick="abrirDetalhe('${a.id}')">
+    <div class="card-header-area">
+      <div class="card-fotos">${fotosInner}</div>
+      ${dotsInner}
+      <div class="badge-bairro">${a.bairro||''}</div>
+      ${badgePrio}
+      ${logoImg}
+    </div>
+    <div class="card-body" style="${a.logo?'padding-top:26px':''}">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:4px;margin-bottom:2px">
+        <div class="card-nome" style="margin-bottom:0">${a.nome}</div>
+        ${viewsHTML}
+      </div>
+      ${ratingHTML}
+      ${validadeHTML}
+      ${horarioHTML(a)}
+      <div class="card-desc">${a.descricao||''}</div>
+      <div class="card-footer">
+        <a class="btn-zap" href="${zapURL}" target="_blank" onclick="event.stopPropagation()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          Falar
+        </a>
+        <div style="display:flex;align-items:center;gap:6px">
+          <button class="btn-share-card" onclick="event.stopPropagation();abrirCompartilhar('${a.id}')" title="Compartilhar">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          </button>
+          <span class="tag-cat">${(a.categoria||'').split(' ')[0]}</span>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function trocarFotoCard(e, dotsEl, idx) {
+  e.stopPropagation();
+  const area = dotsEl.closest('.card-header-area');
+  area.querySelectorAll('.card-fotos img').forEach(img=>img.classList.remove('ativa'));
+  area.querySelectorAll('.dot').forEach(d=>d.classList.remove('ativa'));
+  const imgs = area.querySelectorAll('.card-fotos img');
+  if (imgs[idx]) imgs[idx].classList.add('ativa');
+  dotsEl.querySelectorAll('.dot')[idx]?.classList.add('ativa');
+}
+
+// ══════════════════════════════════════════════
+// MODAL DETALHE
+// ══════════════════════════════════════════════
+function registrarVisualizacao(id) {
+  if (!fb || !fb.doc) { visualizacoes[id] = (visualizacoes[id]||0) + 1; return; }
+  try {
+    const ref = fb.doc(fb.db, 'visualizacoes', id);
+    fb.setDoc(ref, { count: (visualizacoes[id]||0) + 1 }, { merge: true });
+  } catch(e) {}
+}
+
+function abrirDetalhe(id) {
+  const a = todosAnuncios.find(x=>x.id===id);
+  if (!a) return;
+  registrarVisualizacao(id);
+
+  const fts = (a.fotos||[]).filter(Boolean);
+  const num = (a.whatsapp||'').replace(/\D/g,'');
+  const zapURL = `https://wa.me/55${num}?text=Oi!+Vi+seu+anúncio+no+Mercado+ON+e+tenho+interesse+😊`;
+  const logoTag = a.logo ? `<img class="detalhe-logo visivel" src="${a.logo}" alt="logo">` : '';
+  const aberto = calcularStatus(a.horaAbre, a.horaFecha);
+  const horarioDetalhe = (a.horaAbre && a.horaFecha)
+    ? `<span style="font-size:.82rem;${aberto===true?'color:#16A34A':'color:#DC2626'};font-weight:700">
+         ${aberto===true?'● Aberto agora':'● Fechado agora'}
+       </span>
+       <span style="font-size:.82rem;color:var(--sub)"> · ${fmtHora(a.horaAbre)} às ${fmtHora(a.horaFecha)}</span>`
+    : '';
+
+  // views e rating no detalhe
+  const views = (visualizacoes[id]||0) + 1;
+  const av = avaliacoes[id];
+  const ratingDetalhe = av
+    ? `<div style="display:flex;align-items:center;gap:6px;margin-top:4px">
+        <span style="color:#F59E0B;font-size:1rem">${'⭐'.repeat(Math.round(av.media))}</span>
+        <span style="font-weight:700;font-size:.88rem">${av.media.toFixed(1)}</span>
+        <span style="color:var(--sub);font-size:.8rem">(${av.count} avaliação${av.count!==1?'s':''})</span>
+      </div>`
+    : `<div style="color:var(--sub);font-size:.8rem;margin-top:4px">Sem avaliações ainda</div>`;
+
+  // validade
+  const dias = diasRestantes(a);
+  let validadeDetalhe = '';
+  if (dias !== null) {
+    if (dias <= 0) validadeDetalhe = `<div class="badge-expirado" style="margin-top:6px">⏸ Anúncio expirado</div>`;
+    else if (dias <= 5) validadeDetalhe = `<div class="badge-expirando" style="margin-top:6px">⚠️ Expira em ${dias} dia${dias!==1?'s':''} — peça para renovar</div>`;
+    else validadeDetalhe = `<div style="font-size:.75rem;color:var(--sub);margin-top:6px">⏱ Válido por mais ${dias} dia${dias!==1?'s':''}</div>`;
+  }
+
+  // botão solicitar pelo zap
+  const numAdmin = '92999999999'; // substitua pelo seu número
+  const txtSolicitar = encodeURIComponent(`Olá! Quero anunciar no Mercado ON!\n\n🏪 Nome do negócio:\n📍 Bairro:\n📦 O que vendo:\n📞 WhatsApp:`);
+  const zapAdmin = `https://wa.me/55${numAdmin}?text=${txtSolicitar}`;
+
+  document.getElementById('detalheConteudo').innerHTML = `
+    ${fts.length?`<div class="detalhe-fotos">${fts.map(f=>`<img src="${f}">`).join('')}</div>`:''}
+    <div class="detalhe-header">
+      ${logoTag}
+      <div style="flex:1;min-width:0">
+        <h2 style="font-size:1.2rem;font-weight:800;margin-bottom:2px">${a.nome}</h2>
+        <div style="font-size:.83rem;color:var(--sub)">📍 ${a.bairro} · ${a.categoria||''}</div>
+        ${horarioDetalhe ? `<div style="margin-top:4px">${horarioDetalhe}</div>` : ''}
+        ${ratingDetalhe}
+        ${validadeDetalhe}
+        <div style="font-size:.72rem;color:var(--sub);margin-top:4px">👁 ${views} visualizaç${views===1?'ão':'ões'}</div>
+      </div>
+    </div>
+    <p style="font-size:.95rem;line-height:1.65;margin-bottom:20px">${(a.descricao||'').replace(/\n/g,'<br>')}</p>
+
+    <a class="btn-zap" href="${zapURL}" target="_blank"
+       style="display:flex;font-size:1rem;padding:14px 24px;border-radius:14px;justify-content:center;width:100%;margin-bottom:10px">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="margin-right:8px;flex-shrink:0"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+      Chamar no WhatsApp
+    </a>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+      <button class="btn-share-detalhe" style="margin-bottom:0" onclick="abrirCompartilhar('${a.id}')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        Compartilhar
+      </button>
+      <button class="btn-share-detalhe" style="margin-bottom:0" onclick="abrirAvaliar('${a.id}')">
+        ⭐ Avaliar
+      </button>
+    </div>
+
+    <button class="btn-share-detalhe" style="margin-bottom:10px" onclick="abrirPerfil('${a.id}')">
+      🏪 Ver todos os anúncios deste vendedor
+    </button>`;
+
+  document.getElementById('overlayDetalhe').classList.add('aberto');
+}
+function fecharDetalhe() { document.getElementById('overlayDetalhe').classList.remove('aberto'); }
+function fecharDetalheSeClicarFora(e) { if(e.target.id==='overlayDetalhe') fecharDetalhe(); }
+
+// ══════════════════════════════════════════════
+// MODAL CADASTRO
+// ══════════════════════════════════════════════
+function abrirModal() {
+  fotos = [null,null,null]; logoBase64 = null;
+  ['0','1','2'].forEach(i => {
+    document.getElementById('prev'+i).src='';
+    document.getElementById('slot'+i).classList.remove('tem-foto');
+  });
+  document.getElementById('logoPrev').src='';
+  document.getElementById('logoPrev').classList.remove('visivel');
+  document.getElementById('logoBox').classList.remove('tem-logo');
+  ['nome','bairro','descricao','whatsapp','horaAbre','horaFecha'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('categoria').value='';
+  document.getElementById('overlay').classList.add('aberto');
+}
+function fecharModal()  { document.getElementById('overlay').classList.remove('aberto'); }
+function fecharSeClicarFora(e) { if(e.target.id==='overlay') fecharModal(); }
+
+// LOGO
+function clicarLogo() {
+  document.getElementById('logoInput').value='';
+  document.getElementById('logoInput').click();
+}
+function onLogoSelecionada(e) {
+  const file = e.target.files[0]; if(!file) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    logoBase64 = ev.target.result;
+    const img = document.getElementById('logoPrev');
+    img.src = logoBase64; img.classList.add('visivel');
+    document.getElementById('logoBox').classList.add('tem-logo');
+  };
+  r.readAsDataURL(file);
+}
+function removerLogo(e) {
+  e.stopPropagation();
+  logoBase64 = null;
+  const img = document.getElementById('logoPrev');
+  img.src=''; img.classList.remove('visivel');
+  document.getElementById('logoBox').classList.remove('tem-logo');
+}
+
+// FOTOS
+function clicarFoto(i) {
+  slotAtual=i;
+  document.getElementById('fileInput').value='';
+  document.getElementById('fileInput').click();
+}
+function onFotoSelecionada(e) {
+  const file=e.target.files[0]; if(!file) return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    fotos[slotAtual]=ev.target.result;
+    document.getElementById('prev'+slotAtual).src=ev.target.result;
+    document.getElementById('slot'+slotAtual).classList.add('tem-foto');
+  };
+  r.readAsDataURL(file);
+}
+function removerFoto(e,i) {
+  e.stopPropagation();
+  fotos[i]=null;
+  document.getElementById('prev'+i).src='';
+  document.getElementById('slot'+i).classList.remove('tem-foto');
+}
+
+// SALVAR
+async function salvar() {
+  const nome      = document.getElementById('nome').value.trim();
+  const categoria = document.getElementById('categoria').value;
+  const bairro    = document.getElementById('bairro').value.trim();
+  const descricao = document.getElementById('descricao').value.trim();
+  const whatsapp  = document.getElementById('whatsapp').value.replace(/\D/g,'');
+  const horaAbre  = document.getElementById('horaAbre').value;
+  const horaFecha = document.getElementById('horaFecha').value;
+
+  if (!nome||!categoria||!bairro||!descricao||!whatsapp||!horaAbre||!horaFecha) {
+    showToast('⚠️ Preencha todos os campos obrigatórios'); return;
+  }
+  if (whatsapp.length<10) { showToast('⚠️ WhatsApp inválido'); return; }
+
+  const btn = document.getElementById('btnSalvar');
+  btn.disabled=true; btn.textContent='Publicando…';
+
+  try {
+    let urls = [];
+    let logoURL = logoBase64 || '';
+
+    if (fb && fb.ref) {
+      // upload logo
+      if (logoBase64) {
+        try {
+          const lr = fb.ref(fb.storage,`logos/${Date.now()}.jpg`);
+          await fb.uploadString(lr, logoBase64,'data_url');
+          logoURL = await fb.getDownloadURL(lr);
+        } catch { logoURL = logoBase64; }
+      }
+      // upload fotos
+      for (let i=0;i<3;i++) {
+        if (!fotos[i]) continue;
+        try {
+          const sr = fb.ref(fb.storage,`anuncios/${Date.now()}_${i}.jpg`);
+          await fb.uploadString(sr,fotos[i],'data_url');
+          urls.push(await fb.getDownloadURL(sr));
+        } catch { urls.push(fotos[i]); }
+      }
+    } else {
+      urls = fotos.filter(Boolean);
+    }
+
+    const dados = { nome, categoria, bairro, descricao, whatsapp, horaAbre, horaFecha, logo: logoURL, fotos: urls };
+
+    if (fb && fb.addDoc) {
+      await fb.addDoc(fb.collection(fb.db,'anuncios'), { ...dados, criadoEm: fb.serverTimestamp() });
+      showToast('✅ Anúncio publicado com sucesso!');
+    } else {
+      todosAnuncios.unshift({ id:'local_'+Date.now(), ...dados });
+      atualizarChipsBairros(); renderizar();
+      showToast('✅ Anúncio publicado (modo demo)!');
+    }
+    fecharModal();
+  } catch(err) {
+    console.error(err); showToast('❌ Erro ao publicar. Tente novamente.');
+  }
+  btn.disabled=false; btn.textContent='Publicar anúncio';
+}
+
+// ══════════════════════════════════════════════
+// ADMIN — GATILHO OCULTO
+// ══════════════════════════════════════════════
+function tentarAdmin() {
+  document.getElementById('inputChave').value='';
+  document.getElementById('inputChave').classList.remove('erro');
+  document.getElementById('overlayChave').classList.add('aberto');
+  setTimeout(()=>document.getElementById('inputChave').focus(), 100);
+}
+
+async function confirmarChave() {
+  const v = document.getElementById('inputChave').value.trim();
+  const enc = new TextEncoder().encode(v);
+  const buf = await crypto.subtle.digest('SHA-256', enc);
+  const hash = Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+  const ADMIN_HASH = 'd3ecc5b7fe38ffd3397473362f2c42321fb82deb23083ed13cf6f20320ab6c92';
+  if (hash === ADMIN_HASH) {
+    document.getElementById('overlayChave').classList.remove('aberto');
+    abrirAdmin();
+  } else {
+    const inp = document.getElementById('inputChave');
+    inp.classList.add('erro');
+    inp.value='';
+    setTimeout(()=>inp.classList.remove('erro'), 400);
+    showToast('❌ Palavra-chave incorreta');
+  }
+}
+
+function fecharChave() {
+  document.getElementById('overlayChave').classList.remove('aberto');
+}
+
+// ══════════════════════════════════════════════
+// ADMIN — PAINEL
+// ══════════════════════════════════════════════
+function abrirAdmin() {
+  // resumo
+  const total = todosAnuncios.length;
+  const bairros = new Set(todosAnuncios.map(a=>a.bairro).filter(Boolean)).size;
+  const agora = new Date();
+  const abertos = todosAnuncios.filter(a=>calcularStatus(a.horaAbre,a.horaFecha)===true).length;
+  const emDestaque = todosAnuncios.filter(a=>prioridadeValida(a.id, Date.now())).length;
+  const totalViews = Object.values(visualizacoes).reduce((s,v)=>s+v,0);
+
+  document.getElementById('adminResumo').innerHTML = `
+    ${statBox('📦','Total de anúncios', total)}
+    ${statBox('🏘️','Bairros', bairros)}
+    ${statBox('🟢','Abertos agora', abertos)}
+    ${statBox('⭐','Em destaque', emDestaque)}
+    ${statBox('👁','Visualizações', totalViews)}`;
+
+  // seção prioridade
+  renderizarPrioridades();
+
+  // lista anúncios
+  const lista = document.getElementById('adminLista');
+  if (!total) { lista.innerHTML='<p style="color:var(--sub);font-size:.9rem">Nenhum anúncio cadastrado ainda.</p>'; }
+  else {
+    lista.innerHTML = todosAnuncios.map(a=>`
+      <div class="admin-card-item">
+        <div class="admin-card-logo">
+          ${a.logo?`<img src="${a.logo}" alt="logo">`:'🛒'}
+        </div>
+        <div class="admin-card-info">
+          <strong>${a.nome}</strong>
+          <span>${a.bairro} · ${(a.categoria||'').split(' ').slice(0,2).join(' ')}</span>
+          <span style="font-size:.72rem;color:var(--sub)">👁 ${visualizacoes[a.id]||0} visitas${avaliacoes[a.id]?' · ⭐ '+avaliacoes[a.id].media.toFixed(1)+' ('+avaliacoes[a.id].count+')':''}</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
+          <button class="btn-prio-toggle btn-prio-diario ${prioridadeValida(a.id,Date.now())&&prioridades[a.id]?.tipo==='diario'?'ativo':''}"
+            onclick="ativarPrioridade('${a.id}','diario')">☀️ Dia</button>
+          <button class="btn-prio-toggle btn-prio-semanal ${prioridadeValida(a.id,Date.now())&&prioridades[a.id]?.tipo==='semanal'?'ativo':''}"
+            onclick="ativarPrioridade('${a.id}','semanal')">📅 Sem.</button>
+          <button class="btn-excluir" onclick="excluirAnuncio('${a.id}')">Excluir</button>
+        </div>
+      </div>`).join('');
+  }
+  document.getElementById('overlayAdmin').classList.add('aberto');
+}
+
+function renderizarPrioridades() {
+  const agora = Date.now();
+  const comPrio = todosAnuncios.filter(a => prioridadeValida(a.id, agora));
+  const listaEl = document.getElementById('adminPrioridadeLista');
+  const vazioEl = document.getElementById('adminPrioridadeVazio');
+
+  if (!comPrio.length) {
+    listaEl.innerHTML = '';
+    vazioEl.style.display = 'block';
+    return;
+  }
+  vazioEl.style.display = 'none';
+  listaEl.innerHTML = comPrio.map(a => {
+    const p = prioridades[a.id];
+    const isSemanal = p.tipo === 'semanal';
+    const durMs = isSemanal ? 7*24*60*60*1000 : 24*60*60*1000;
+    const restMs = Math.max(0, (p.ativadoEm + durMs) - agora);
+    const restH = Math.floor(restMs / 3600000);
+    const restM = Math.floor((restMs % 3600000) / 60000);
+    const tempo = restH > 0 ? `${restH}h${restM}min restantes` : `${restM}min restantes`;
+    return `
+    <div class="prioridade-item ${isSemanal?'ativo-semanal':'ativo-diario'}">
+      <div class="prioridade-logo">${a.logo?`<img src="${a.logo}">`:'🛒'}</div>
+      <div class="prioridade-info">
+        <strong>${a.nome}</strong>
+        <span>${a.bairro} · ${(a.categoria||'').split(' ').slice(0,2).join(' ')}</span>
+        <div class="prio-vencimento ${isSemanal?'semanal':'diario'}">
+          ${isSemanal?'📅':'☀️'} ${isSemanal?'Semanal':'Diário'} · ⏱ ${tempo}
+        </div>
+      </div>
+      <button class="btn-prio-remover" onclick="removerPrioridade('${a.id}')">Remover</button>
+    </div>`;
+  }).join('');
+}
+
+function statBox(icon, label, val) {
+  return `<div style="background:var(--fundo);border-radius:10px;padding:12px;text-align:center">
+    <div style="font-size:1.4rem">${icon}</div>
+    <div style="font-size:1.3rem;font-weight:800;color:var(--verde)">${val}</div>
+    <div style="font-size:.72rem;color:var(--sub)">${label}</div>
+  </div>`;
+}
+
+async function excluirAnuncio(id) {
+  if (!confirm('Excluir este anúncio?')) return;
+  if (fb && fb.deleteDoc) {
+    try {
+      await fb.deleteDoc(fb.doc(fb.db,'anuncios',id));
+      showToast('🗑️ Anúncio excluído');
+    } catch(e) { showToast('❌ Erro ao excluir'); return; }
+  } else {
+    todosAnuncios = todosAnuncios.filter(a=>a.id!==id);
+    atualizarChipsBairros(); renderizar();
+    showToast('🗑️ Anúncio excluído (demo)');
+  }
+  abrirAdmin(); // atualiza lista
+}
+
+async function ativarPrioridade(id, tipo) {
+  const agora = Date.now();
+  const jaAtivo = prioridadeValida(id, agora) && prioridades[id]?.tipo === tipo;
+  if (jaAtivo) {
+    // já ativo nesse tipo → remove
+    await removerPrioridade(id);
+    return;
+  }
+  const dado = { tipo, ativadoEm: agora };
+  if (fb && fb.doc) {
+    try {
+      const { setDoc } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+      await setDoc(fb.doc(fb.db, 'prioridades', id), dado);
+    } catch(e) {
+      prioridades[id] = dado; renderizar();
+    }
+  } else {
+    prioridades[id] = dado; renderizar();
+  }
+  showToast(`⭐ Prioridade ${tipo==='semanal'?'semanal':'diária'} ativada!`);
+  abrirAdmin();
+}
+
+async function removerPrioridade(id) {
+  if (fb && fb.deleteDoc) {
+    try {
+      await fb.deleteDoc(fb.doc(fb.db, 'prioridades', id));
+    } catch(e) {
+      delete prioridades[id]; renderizar();
+    }
+  } else {
+    delete prioridades[id]; renderizar();
+  }
+  showToast('🗑️ Prioridade removida');
+  abrirAdmin();
+}
+
+// ══════════════════════════════════════════════
+// MODAL DESTAQUE (BANNER)
+// ══════════════════════════════════════════════
+let planoDestageSel = 'diario';
+
+function abrirModalDestaque() {
+  planoDestageSel = 'diario';
+  atualizarSelPlano();
+  document.getElementById('overlayDestaque').classList.add('aberto');
+}
+function fecharModalDestaque() {
+  document.getElementById('overlayDestaque').classList.remove('aberto');
+}
+function escolherPlanoDestaque(plano) {
+  planoDestageSel = plano;
+  atualizarSelPlano();
+}
+function atualizarSelPlano() {
+  document.getElementById('planoDiario').style.opacity  = planoDestageSel === 'diario'  ? '1' : '.5';
+  document.getElementById('planoSemanal').style.opacity = planoDestageSel === 'semanal' ? '1' : '.5';
+  document.getElementById('planoDiario').style.transform  = planoDestageSel === 'diario'  ? 'scale(1.02)' : 'scale(1)';
+  document.getElementById('planoSemanal').style.transform = planoDestageSel === 'semanal' ? 'scale(1.02)' : 'scale(1)';
+}
+function solicitarDestaque() {
+  const numAdmin = '92999999999'; // ← coloque seu número aqui
+  const plano = planoDestageSel === 'semanal' ? 'Semanal (R$ 25 / 7 dias)' : 'Diário (R$ 5 / 24h)';
+  const txt = encodeURIComponent(
+    `Olá! Quero colocar meu anúncio em *Destaque* no Mercado ON! ⭐\n\n` +
+    `📌 Plano escolhido: *${plano}*\n\n` +
+    `🏪 Nome do meu anúncio:\n` +
+    `📍 Bairro:\n\n` +
+    `Como faço o pagamento?`
+  );
+  window.open(`https://wa.me/5592999999999?text=${txt}`, '_blank');
+  fecharModalDestaque();
+}
+
+// ══════════════════════════════════════════════
+// MODO ESCURO
+// ══════════════════════════════════════════════
+function toggleDark() {
+  modoEscuro = !modoEscuro;
+  document.body.classList.toggle('dark', modoEscuro);
+  document.getElementById('btnDark').textContent = modoEscuro ? '☀️' : '🌙';
+  localStorage.setItem('darkMode', modoEscuro ? '1' : '0');
+}
+
+// ══════════════════════════════════════════════
+// PERFIL DO VENDEDOR
+// ══════════════════════════════════════════════
+function abrirPerfil(refId) {
+  const ref = todosAnuncios.find(x => x.id === refId);
+  if (!ref) return;
+  // agrupa por whatsapp (identificador do vendedor)
+  const zap = (ref.whatsapp||'').replace(/\D/g,'');
+  const anunciosVendedor = todosAnuncios.filter(a => (a.whatsapp||'').replace(/\D/g,'') === zap);
+
+  // calcula média geral
+  let totalNotas = 0, totalCount = 0;
+  anunciosVendedor.forEach(a => {
+    const av = avaliacoes[a.id];
+    if (av) { totalNotas += av.total; totalCount += av.count; }
+  });
+  const mediaGeral = totalCount > 0 ? (totalNotas / totalCount).toFixed(1) : null;
+  const starsGeral = mediaGeral ? `${'⭐'.repeat(Math.round(mediaGeral))}${'☆'.repeat(5-Math.round(mediaGeral))} ${mediaGeral} (${totalCount} aval.)` : 'Sem avaliações';
+
+  const logoHTML = ref.logo
+    ? `<div class="perfil-logo"><img src="${ref.logo}" alt="logo"></div>`
+    : `<div class="perfil-logo">🏪</div>`;
+
+  const cardsHTML = anunciosVendedor.map(a => {
+    const fts = (a.fotos||[]).filter(Boolean);
+    const img = fts.length ? `<img src="${fts[0]}" style="width:56px;height:56px;object-fit:cover;border-radius:10px;flex-shrink:0;border:2px solid var(--borda)">` : `<div style="width:56px;height:56px;border-radius:10px;background:var(--fundo);display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0">🛒</div>`;
+    const av = avaliacoes[a.id];
+    const ratingMini = av ? `<span style="font-size:.72rem;color:#F59E0B">⭐ ${av.media.toFixed(1)} (${av.count})</span>` : '';
+    const views = visualizacoes[a.id]||0;
+    return `
+    <div style="display:flex;gap:10px;align-items:center;padding:10px;background:var(--fundo);border-radius:12px;margin-bottom:8px;cursor:pointer" onclick="fecharPerfil();setTimeout(()=>abrirDetalhe('${a.id}'),200)">
+      ${img}
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:700;font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.nome}</div>
+        <div style="font-size:.75rem;color:var(--sub)">${a.bairro} · ${(a.categoria||'').replace(/^\S+\s/,'')}</div>
+        <div style="display:flex;gap:8px;align-items:center;margin-top:2px">${ratingMini}<span style="font-size:.72rem;color:var(--sub)">👁 ${views}</span></div>
+      </div>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--sub)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>`;
+  }).join('');
+
+  document.getElementById('perfilConteudo').innerHTML = `
+    <div class="perfil-header">
+      ${logoHTML}
+      <div>
+        <div class="perfil-nome">${ref.nome.split(' ').slice(0,3).join(' ')}</div>
+        <div class="perfil-meta">📍 ${ref.bairro} · ${anunciosVendedor.length} anúncio${anunciosVendedor.length!==1?'s':''}</div>
+        <div class="perfil-rating"><span style="color:#F59E0B">${starsGeral}</span></div>
+      </div>
+    </div>
+    <div class="perfil-anuncios-titulo">Anúncios do vendedor</div>
+    ${cardsHTML}`;
+
+  fecharDetalhe();
+  setTimeout(() => document.getElementById('overlayPerfil').classList.add('aberto'), 200);
+}
+function fecharPerfil() { document.getElementById('overlayPerfil').classList.remove('aberto'); }
+function fecharPerfilFora(e) { if(e.target.id==='overlayPerfil') fecharPerfil(); }
+
+// ══════════════════════════════════════════════
+// AVALIAÇÕES
+// ══════════════════════════════════════════════
+function abrirAvaliar(id) {
+  const a = todosAnuncios.find(x => x.id === id);
+  if (!a) return;
+  anuncioAvaliar = a;
+  estrelasSel = 0;
+  document.querySelectorAll('.star-btn').forEach(b => b.classList.remove('sel'));
+  document.getElementById('avaliarComentario').value = '';
+  document.getElementById('avaliarNome').textContent = a.nome;
+  document.getElementById('overlayAvaliar').classList.add('aberto');
+}
+function fecharAvaliar() {
+  document.getElementById('overlayAvaliar').classList.remove('aberto');
+  anuncioAvaliar = null;
+}
+function selecionarEstrela(n) {
+  estrelasSel = n;
+  document.querySelectorAll('.star-btn').forEach((b, i) => b.classList.toggle('sel', i < n));
+}
+async function enviarAvaliacao() {
+  if (!estrelasSel) { showToast('⭐ Selecione uma nota primeiro'); return; }
+  if (!anuncioAvaliar) return;
+  const dado = {
+    anuncioId: anuncioAvaliar.id,
+    nota: estrelasSel,
+    comentario: document.getElementById('avaliarComentario').value.trim(),
+    criadoEm: Date.now()
+  };
+  if (fb && fb.addDoc) {
+    try { await fb.addDoc(fb.collection(fb.db, 'avaliacoes'), dado); }
+    catch(e) {
+      // demo fallback
+      if (!avaliacoes[dado.anuncioId]) avaliacoes[dado.anuncioId] = { total: 0, count: 0 };
+      avaliacoes[dado.anuncioId].total += dado.nota;
+      avaliacoes[dado.anuncioId].count += 1;
+      avaliacoes[dado.anuncioId].media = avaliacoes[dado.anuncioId].total / avaliacoes[dado.anuncioId].count;
+      renderizar();
+    }
+  } else {
+    if (!avaliacoes[dado.anuncioId]) avaliacoes[dado.anuncioId] = { total: 0, count: 0 };
+    avaliacoes[dado.anuncioId].total += dado.nota;
+    avaliacoes[dado.anuncioId].count += 1;
+    avaliacoes[dado.anuncioId].media = avaliacoes[dado.anuncioId].total / avaliacoes[dado.anuncioId].count;
+    renderizar();
+  }
+  fecharAvaliar();
+  showToast('✅ Avaliação enviada! Obrigado.');
+}
+
+// ══════════════════════════════════════════════
+// COMPARTILHAR
+// ══════════════════════════════════════════════
+let anuncioCompartilhando = null;
+
+function gerarLinkAnuncio(id) {
+  const base = window.location.href.split('?')[0].split('#')[0];
+  return `${base}?anuncio=${id}`;
+}
+
+function gerarTextoCompartilhamento(a) {
+  const link = gerarLinkAnuncio(a.id);
+  const horario = (a.horaAbre && a.horaFecha) ? `\n⏰ Horário: ${fmtHora(a.horaAbre)} às ${fmtHora(a.horaFecha)}` : '';
+  return `🛒 *${a.nome}*\n📍 ${a.bairro} · ${(a.categoria||'').replace(/^\S+\s/,'')}\n\n${a.descricao||''}${horario}\n\n🔗 Ver no Mercado ON:\n${link}`;
+}
+
+function abrirCompartilhar(id) {
+  const a = todosAnuncios.find(x => x.id === id);
+  if (!a) return;
+  anuncioCompartilhando = a;
+
+  // link
+  const link = gerarLinkAnuncio(id);
+  document.getElementById('shareLinkInput').value = link;
+
+  // preview
+  const fts = (a.fotos||[]).filter(Boolean);
+  const imgHTML = fts.length
+    ? `<img class="share-preview-img" src="${fts[0]}" alt="${a.nome}">`
+    : `<div class="share-preview-img-placeholder">🛒</div>`;
+  const logoHTML = a.logo
+    ? `<img class="share-preview-logo" src="${a.logo}" alt="logo">`
+    : '';
+  document.getElementById('sharePreview').innerHTML = `
+    ${imgHTML}
+    <div class="share-preview-body">
+      ${logoHTML}
+      <div class="share-preview-info">
+        <strong>${a.nome}</strong>
+        <span>📍 ${a.bairro} · ${(a.categoria||'').replace(/^\S+\s/,'')}</span>
+        <span style="margin-top:2px;color:var(--verde);font-weight:600;font-size:.75rem">${(a.descricao||'').substring(0,60)}${(a.descricao||'').length>60?'…':''}</span>
+      </div>
+    </div>`;
+
+  document.getElementById('overlayCompartilhar').classList.add('aberto');
+}
+
+function fecharCompartilhar() {
+  document.getElementById('overlayCompartilhar').classList.remove('aberto');
+  anuncioCompartilhando = null;
+}
+function fecharCompartilharFora(e) {
+  if (e.target.id === 'overlayCompartilhar') fecharCompartilhar();
+}
+
+function copiarLink() {
+  const val = document.getElementById('shareLinkInput').value;
+  navigator.clipboard.writeText(val).then(() => showToast('🔗 Link copiado!')).catch(() => {
+    document.getElementById('shareLinkInput').select();
+    document.execCommand('copy');
+    showToast('🔗 Link copiado!');
+  });
+}
+
+function copiarTextoCompleto() {
+  if (!anuncioCompartilhando) return;
+  const txt = gerarTextoCompartilhamento(anuncioCompartilhando);
+  navigator.clipboard.writeText(txt).then(() => showToast('📋 Texto copiado! Cole onde quiser.')).catch(() => showToast('⚠️ Não foi possível copiar'));
+}
+
+function compartilharWpp() {
+  if (!anuncioCompartilhando) return;
+  const txt = encodeURIComponent(gerarTextoCompartilhamento(anuncioCompartilhando));
+  window.open(`https://wa.me/?text=${txt}`, '_blank');
+}
+
+function compartilharFacebook() {
+  if (!anuncioCompartilhando) return;
+  const link = encodeURIComponent(gerarLinkAnuncio(anuncioCompartilhando.id));
+  const txt  = encodeURIComponent(`🛒 ${anuncioCompartilhando.nome} — ${anuncioCompartilhando.bairro} | Mercado ON`);
+  window.open(`https://www.facebook.com/sharer/sharer.php?u=${link}&quote=${txt}`, '_blank');
+}
+
+function compartilharInstagram() {
+  if (!anuncioCompartilhando) return;
+  // Instagram não tem API de share direta; copiamos o texto e abrimos o app
+  copiarTextoCompleto();
+  setTimeout(() => {
+    showToast('📋 Texto copiado! Abra o Instagram e cole na legenda.');
+  }, 500);
+}
+
+function compartilharTelegram() {
+  if (!anuncioCompartilhando) return;
+  const txt  = encodeURIComponent(gerarTextoCompartilhamento(anuncioCompartilhando));
+  window.open(`https://t.me/share/url?url=${encodeURIComponent(gerarLinkAnuncio(anuncioCompartilhando.id))}&text=${txt}`, '_blank');
+}
+
+async function compartilharNativo() {
+  if (!anuncioCompartilhando) return;
+  const a = anuncioCompartilhando;
+  const link = gerarLinkAnuncio(a.id);
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: `${a.nome} — Mercado ON`,
+        text: `🛒 ${a.nome}\n📍 ${a.bairro}\n\n${(a.descricao||'').substring(0,120)}`,
+        url: link
+      });
+    } catch(e) { if (e.name !== 'AbortError') copiarLink(); }
+  } else {
+    copiarLink();
+    showToast('🔗 Link copiado! Cole no app desejado.');
+  }
+}
+
+function solicitarAnuncioZap() {
+  const numAdmin = '92999999999'; // ← coloque seu número aqui
+  const txt = encodeURIComponent(
+    `Olá! Quero anunciar no *Mercado ON*! 🛒\n\n` +
+    `📌 Nome do negócio:\n` +
+    `📍 Bairro:\n` +
+    `📦 O que vendo/ofereço:\n` +
+    `📞 Meu WhatsApp:\n` +
+    `⏰ Horário de funcionamento:`
+  );
+  window.open(`https://wa.me/55${numAdmin}?text=${txt}`, '_blank');
+}
+
+// Ao carregar, verifica se há ?anuncio= na URL e abre o detalhe
+window.addEventListener('load', () => {
+  const params = new URLSearchParams(window.location.search);
+  const anuncioId = params.get('anuncio');
+  if (anuncioId) {
+    // aguarda os dados carregarem
+    const tentarAbrir = () => {
+      const a = todosAnuncios.find(x => x.id === anuncioId);
+      if (a) { abrirDetalhe(anuncioId); }
+      else { setTimeout(tentarAbrir, 600); }
+    };
+    setTimeout(tentarAbrir, 800);
+  }
+});
+
+function fecharAdmin() { document.getElementById('overlayAdmin').classList.remove('aberto'); }
+function fecharAdminSeClicarFora(e) { if(e.target.id==='overlayAdmin') fecharAdmin(); }
+
+// ══════════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════════
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+</script>
+<!-- Service Worker PWA -->
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js')
+        .then(r => console.log('SW registrado:', r.scope))
+        .catch(e => console.warn('SW falhou:', e));
+    });
+  }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,21 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Anúncios: leitura pública, escrita liberada (ajuste depois conforme regra de negócio)
+    match /anuncios/{anuncioId} {
+      allow read: if true;
+      allow create: if request.resource.data.keys().hasAll(['titulo', 'descricao'])
+                    && request.resource.data.titulo is string
+                    && request.resource.data.titulo.size() > 0
+                    && request.resource.data.titulo.size() < 200;
+      allow update, delete: if false; // ajuste para exigir autenticação de admin
+    }
+
+    // Bloqueia qualquer outra coleção por padrão
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
