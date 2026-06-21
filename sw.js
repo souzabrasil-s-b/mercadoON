@@ -1,69 +1,76 @@
-// ══════════════════════════════════════════════
-// Mercado ON — Service Worker
-// ══════════════════════════════════════════════
-const CACHE_NAME = 'mercado-on-v1';
-const ASSETS_ESSENCIAIS = [
-  '/',
-  '/index.html',
-  '/manifest.json'
-];
-
-// Instala o SW e guarda os arquivos essenciais no cache
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(ASSETS_ESSENCIAIS))
-      .then(() => self.skipWaiting())
-  );
-});
-
-// Ativa e limpa caches antigos
-self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then((nomes) =>
-      Promise.all(
-        nomes
-          .filter((nome) => nome !== CACHE_NAME)
-          .map((nome) => caches.delete(nome))
-      )
-    ).then(() => self.clients.claim())
-  );
-});
-
-// Estratégia: network-first para HTML (sempre busca a versão mais nova),
-// cache-first para os demais arquivos estáticos.
-self.addEventListener('fetch', (event) => {
-  const { request } = event;
-
-  // Não interceptar chamadas para o Firebase/Firestore/Storage (deixa ir direto pra rede)
-  if (request.url.includes('firestore.googleapis.com') ||
-      request.url.includes('firebasestorage.googleapis.com') ||
-      request.url.includes('googleapis.com') ||
-      request.url.includes('gstatic.com')) {
-    return;
-  }
-
-  if (request.mode === 'navigate' || request.destination === 'document') {
-    event.respondWith(
-      fetch(request)
-        .then((resposta) => {
-          const copia = resposta.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, copia));
-          return resposta;
-        })
-        .catch(() => caches.match(request).then((r) => r || caches.match('/index.html')))
-    );
-    return;
-  }
-
-  event.respondWith(
-    caches.match(request).then((cached) => {
-      if (cached) return cached;
-      return fetch(request).then((resposta) => {
-        const copia = resposta.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(request, copia));
-        return resposta;
-      }).catch(() => cached);
-    })
-  );
-});
+{
+  "name": "Mercado ON — Compre e venda no seu bairro",
+  "short_name": "Mercado ON",
+  "description": "Encontre produtos e serviços perto de você. Marmitas, doces, roupas, beleza e muito mais no seu bairro.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#F3F6F4",
+  "theme_color": "#0D6E3F",
+  "lang": "pt-BR",
+  "dir": "ltr",
+  "categories": ["shopping", "business", "lifestyle"],
+  "icons": [
+    {
+      "src": "icon-72x72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-152x152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-192x192-maskable.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icon-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512x512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
