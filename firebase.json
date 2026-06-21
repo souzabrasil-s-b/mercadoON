@@ -15,7 +15,7 @@
         "headers": [
           {
             "key": "Content-Security-Policy",
-            "value": "default-src 'self'; script-src 'self' 'sha256-rcIdlhIZHgyhuhHw5meq1HKpe7rvk1mTCysIr45RUHI=' 'sha256-DHdfyKiBmLeVLuIfUykwVXkTKGMxmHlEXHevMgWKHdI=' 'sha256-/q977lygXRJKefYlrqS1t7vz6EXqXDhrH0ZxtVYbGmI=' https://www.gstatic.com; connect-src 'self' https://firestore.googleapis.com https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com; img-src 'self' data: blob: https:; style-src 'self' 'unsafe-inline'; frame-ancestors 'none'; base-uri 'self'; form-action 'self';"
+            "value": "default-src 'self'; script-src 'self' 'unsafe-hashes' 'sha256-rcIdlhIZHgyhuhHw5meq1HKpe7rvk1mTCysIr45RUHI=' 'sha256-AKDSZd+0xaXCY844gA1+tyFbddoL3dM2tlWPaX88zzI=' 'sha256-/q977lygXRJKefYlrqS1t7vz6EXqXDhrH0ZxtVYbGmI=' https://www.gstatic.com; connect-src 'self' https://firestore.googleapis.com https://*.googleapis.com https://*.firebaseio.com https://www.gstatic.com wss://*.firebaseio.com; img-src 'self' data: blob: https:; style-src 'self' 'unsafe-inline'; frame-ancestors 'none'; base-uri 'self'; form-action 'self';"
           },
           {
             "key": "X-Content-Type-Options",
