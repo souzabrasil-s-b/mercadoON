@@ -3,14 +3,17 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Anúncios: leitura pública, escrita liberada (ajuste depois conforme regra de negócio)
+    // Anúncios: leitura pública, criação liberada com validação básica
     match /anuncios/{anuncioId} {
       allow read: if true;
-      allow create: if request.resource.data.keys().hasAll(['titulo', 'descricao'])
-                    && request.resource.data.titulo is string
-                    && request.resource.data.titulo.size() > 0
-                    && request.resource.data.titulo.size() < 200;
-      allow update, delete: if false; // ajuste para exigir autenticação de admin
+      allow create: if request.resource.data.keys().hasAll(['nome', 'descricao'])
+                    && request.resource.data.nome is string
+                    && request.resource.data.nome.size() > 0
+                    && request.resource.data.nome.size() < 100
+                    && request.resource.data.descricao is string
+                    && request.resource.data.descricao.size() < 500;
+      // Sem autenticação real de admin ainda (controle é por senha no próprio app)
+      allow update, delete: if true;
     }
 
     // Bloqueia qualquer outra coleção por padrão

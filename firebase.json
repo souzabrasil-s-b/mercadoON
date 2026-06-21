@@ -3,6 +3,7 @@
     "public": ".",
     "ignore": [
       "firebase.json",
+      "firestore.rules",
       "**/.*",
       "**/node_modules/**",
       ".github/**",
@@ -31,8 +32,5 @@
   },
   "firestore": {
     "rules": "firestore.rules"
-  },
-  "storage": {
-    "rules": "storage.rules"
   }
 }

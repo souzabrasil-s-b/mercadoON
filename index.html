@@ -29,7 +29,7 @@
 <meta property="og:image"       content="icons/icon-512x512.png">
 <meta property="og:image:width"  content="512">
 <meta property="og:image:height" content="512">
-<meta property="og:url"         content="https://SEU-PROJETO.web.app">
+<meta property="og:url"         content="https://mercado--on.web.app">
 <meta name="twitter:card"        content="summary_large_image">
 <meta name="twitter:title"       content="Mercado ON">
 <meta name="twitter:description" content="Compre e venda no seu bairro.">
@@ -39,26 +39,22 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, deleteDoc, doc }
     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-  import { getStorage, ref, uploadString, getDownloadURL }
-    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
   // ══════════════════════════════════════════
   // ⚙️  SUBSTITUA PELAS SUAS CREDENCIAIS FIREBASE
   // ══════════════════════════════════════════
   const firebaseConfig = {
-    apiKey: "SUA_API_KEY",
-    authDomain: "SEU_PROJETO.firebaseapp.com",
-    projectId: "SEU_PROJETO",
-    storageBucket: "SEU_PROJETO.appspot.com",
-    messagingSenderId: "SEU_ID",
-    appId: "SEU_APP_ID"
+    apiKey: "AIzaSyCLatVLzeucP05xIR5o6EDtmtx5IwjEtT4",
+    authDomain: "mercado--on.firebaseapp.com",
+    projectId: "mercado--on",
+    messagingSenderId: "68776938627",
+    appId: "1:68776938627:web:c57f324bc17979fc9a5fb6"
   };
 
   const app = initializeApp(firebaseConfig);
   const db  = getFirestore(app);
-  const storage = getStorage(app);
 
-  window._fbReady = { db, storage, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, ref, uploadString, getDownloadURL, deleteDoc, doc };
+  window._fbReady = { db, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, deleteDoc, doc };
   document.dispatchEvent(new Event("fbReady"));
 </script>
 
@@ -1532,7 +1528,7 @@ function abrirDetalhe(id) {
   }
 
   // botão solicitar pelo zap
-  const numAdmin = '92999999999'; // substitua pelo seu número
+  const numAdmin = '92994810508'; // substitua pelo seu número
   const txtSolicitar = encodeURIComponent(`Olá! Quero anunciar no Mercado ON!\n\n🏪 Nome do negócio:\n📍 Bairro:\n📦 O que vendo:\n📞 WhatsApp:`);
   const zapAdmin = `https://wa.me/55${numAdmin}?text=${txtSolicitar}`;
 
@@ -1604,10 +1600,12 @@ function onLogoSelecionada(e) {
   const file = e.target.files[0]; if(!file) return;
   const r = new FileReader();
   r.onload = ev => {
-    logoBase64 = ev.target.result;
-    const img = document.getElementById('logoPrev');
-    img.src = logoBase64; img.classList.add('visivel');
-    document.getElementById('logoBox').classList.add('tem-logo');
+    comprimirImagem(ev.target.result, 400, 0.75).then(comprimida=>{
+      logoBase64 = comprimida;
+      const img = document.getElementById('logoPrev');
+      img.src = logoBase64; img.classList.add('visivel');
+      document.getElementById('logoBox').classList.add('tem-logo');
+    });
   };
   r.readAsDataURL(file);
 }
@@ -1617,6 +1615,26 @@ function removerLogo(e) {
   const img = document.getElementById('logoPrev');
   img.src=''; img.classList.remove('visivel');
   document.getElementById('logoBox').classList.remove('tem-logo');
+}
+
+// Redimensiona/comprime a imagem antes de salvar no Firestore (evita documentos grandes)
+function comprimirImagem(dataUrl, maxDim, qualidade) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      let w = img.width, h = img.height;
+      if (w > maxDim || h > maxDim) {
+        if (w >= h) { h = Math.round(h * maxDim / w); w = maxDim; }
+        else { w = Math.round(w * maxDim / h); h = maxDim; }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL('image/jpeg', qualidade));
+    };
+    img.onerror = () => resolve(dataUrl);
+    img.src = dataUrl;
+  });
 }
 
 // FOTOS
@@ -1629,9 +1647,11 @@ function onFotoSelecionada(e) {
   const file=e.target.files[0]; if(!file) return;
   const r=new FileReader();
   r.onload=ev=>{
-    fotos[slotAtual]=ev.target.result;
-    document.getElementById('prev'+slotAtual).src=ev.target.result;
-    document.getElementById('slot'+slotAtual).classList.add('tem-foto');
+    comprimirImagem(ev.target.result, 700, 0.7).then(comprimida=>{
+      fotos[slotAtual]=comprimida;
+      document.getElementById('prev'+slotAtual).src=comprimida;
+      document.getElementById('slot'+slotAtual).classList.add('tem-foto');
+    });
   };
   r.readAsDataURL(file);
 }
@@ -1661,30 +1681,8 @@ async function salvar() {
   btn.disabled=true; btn.textContent='Publicando…';
 
   try {
-    let urls = [];
-    let logoURL = logoBase64 || '';
-
-    if (fb && fb.ref) {
-      // upload logo
-      if (logoBase64) {
-        try {
-          const lr = fb.ref(fb.storage,`logos/${Date.now()}.jpg`);
-          await fb.uploadString(lr, logoBase64,'data_url');
-          logoURL = await fb.getDownloadURL(lr);
-        } catch { logoURL = logoBase64; }
-      }
-      // upload fotos
-      for (let i=0;i<3;i++) {
-        if (!fotos[i]) continue;
-        try {
-          const sr = fb.ref(fb.storage,`anuncios/${Date.now()}_${i}.jpg`);
-          await fb.uploadString(sr,fotos[i],'data_url');
-          urls.push(await fb.getDownloadURL(sr));
-        } catch { urls.push(fotos[i]); }
-      }
-    } else {
-      urls = fotos.filter(Boolean);
-    }
+    const urls = fotos.filter(Boolean);
+    const logoURL = logoBase64 || '';
 
     const dados = { nome, categoria, bairro, descricao, whatsapp, horaAbre, horaFecha, logo: logoURL, fotos: urls };
 
@@ -1902,7 +1900,7 @@ function atualizarSelPlano() {
   document.getElementById('planoSemanal').style.transform = planoDestageSel === 'semanal' ? 'scale(1.02)' : 'scale(1)';
 }
 function solicitarDestaque() {
-  const numAdmin = '92999999999'; // ← coloque seu número aqui
+  const numAdmin = '92994810508'; // ← coloque seu número aqui
   const plano = planoDestageSel === 'semanal' ? 'Semanal (R$ 25 / 7 dias)' : 'Diário (R$ 5 / 24h)';
   const txt = encodeURIComponent(
     `Olá! Quero colocar meu anúncio em *Destaque* no Mercado ON! ⭐\n\n` +
@@ -1911,7 +1909,7 @@ function solicitarDestaque() {
     `📍 Bairro:\n\n` +
     `Como faço o pagamento?`
   );
-  window.open(`https://wa.me/5592999999999?text=${txt}`, '_blank');
+  window.open(`https://wa.me/5592994810508?text=${txt}`, '_blank');
   fecharModalDestaque();
 }
 
@@ -2152,7 +2150,7 @@ async function compartilharNativo() {
 }
 
 function solicitarAnuncioZap() {
-  const numAdmin = '92999999999'; // ← coloque seu número aqui
+  const numAdmin = '92994810508'; // ← coloque seu número aqui
   const txt = encodeURIComponent(
     `Olá! Quero anunciar no *Mercado ON*! 🛒\n\n` +
     `📌 Nome do negócio:\n` +
