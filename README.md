@@ -1,4 +1,4 @@
-# Mercado ON — Compre e venda no seu bairro
+# Mercado ON — Compre e venda no seu bairro 
 
 PWA para anúncios locais (marmitas, doces, roupas, beleza, serviços) com Firebase (Firestore + Storage).
 
