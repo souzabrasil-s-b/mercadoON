@@ -19,7 +19,7 @@
     'self'
     'unsafe-hashes'
     'sha256-rcIdlhIZHgyhuhHw5meq1HKpe7rvk1mTCysIr45RUHI='
-    'sha256-UHBFut7Zm00gc3ayh/7Ahgz6zI8ohLM57SQUcT58z/c='
+    'sha256-AKDSZd+0xaXCY844gA1+tyFbddoL3dM2tlWPaX88zzI='
     'sha256-/q977lygXRJKefYlrqS1t7vz6EXqXDhrH0ZxtVYbGmI='
     https://www.gstatic.com;
   connect-src
@@ -27,6 +27,7 @@
     https://firestore.googleapis.com
     https://*.googleapis.com
     https://*.firebaseio.com
+    https://www.gstatic.com
     wss://*.firebaseio.com;
   img-src 'self' data: blob: https:;
   style-src 'self' 'unsafe-inline';
@@ -1192,9 +1193,19 @@
 // LISTENERS — substituem onclick/ondblclick inline
 // (necessário por causa da CSP sem 'unsafe-inline')
 // ══════════════════════════════════════════════
-document.getElementById('adminTrigger').addEventListener('dblclick', tentarAdmin);
-document.getElementById('btnDark').addEventListener('click', toggleDark);
-document.getElementById('btnAnunciar').addEventListener('click', abrirModal);
+document.getElementById('adminTrigger').addEventListener('dblclick', () => {
+  try { tentarAdmin(); }
+  catch(e) { alert('ERRO no admin: ' + e.message); console.error(e); }
+});
+document.getElementById('btnDark').addEventListener('click', () => {
+  try { toggleDark(); }
+  catch(e) { alert('ERRO no dark mode: ' + e.message); console.error(e); }
+});
+document.getElementById('btnAnunciar').addEventListener('click', () => {
+  alert('Botão clicado! Tentando abrir modal...');
+  try { abrirModal(); alert('abrirModal() rodou sem erro.'); }
+  catch(e) { alert('ERRO no anunciar: ' + e.message); console.error(e); }
+});
 
 function esc(str) {
   return String(str == null ? '' : str)
