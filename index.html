@@ -21,9 +21,6 @@
     'sha256-rcIdlhIZHgyhuhHw5meq1HKpe7rvk1mTCysIr45RUHI='
     'sha256-DHdfyKiBmLeVLuIfUykwVXkTKGMxmHlEXHevMgWKHdI='
     'sha256-/q977lygXRJKefYlrqS1t7vz6EXqXDhrH0ZxtVYbGmI='
-    'sha256-Z9do5weeihTwg6jdiy29uyZNOV7ElWc/XpRJLbU0N4c='
-    'sha256-QVIoa5V1waFv3FGm488OfeoL8QKSi4gZTDBUezquVpQ='
-    'sha256-50LR6BNSjRYhhW1vGERrUaHp/X103qIBw6sD0+TS3Rk='
     https://www.gstatic.com;
   connect-src
     'self'
@@ -843,11 +840,11 @@
 <!-- HEADER -->
 <header>
   <div class="header-inner">
-    <div class="admin-trigger" id="adminTrigger" ondblclick="tentarAdmin()"></div>
+    <div class="admin-trigger" id="adminTrigger"></div>
     <div class="logo">Mercado <span class="on-badge"><span class="on-dot"></span>ON</span></div>
     <div style="display:flex;align-items:center;gap:8px">
-      <button class="btn-dark" id="btnDark" onclick="toggleDark()" title="Modo escuro">🌙</button>
-      <button class="btn-anunciar" onclick="abrirModal()">+ Anunciar</button>
+      <button class="btn-dark" id="btnDark" title="Modo escuro">🌙</button>
+      <button class="btn-anunciar" id="btnAnunciar">+ Anunciar</button>
     </div>
   </div>
 </header>
@@ -1191,6 +1188,14 @@
 // SEGURANÇA — sanitização contra XSS
 // Sempre use esc() ao inserir dados do Firestore via innerHTML
 // ══════════════════════════════════════════════
+// ══════════════════════════════════════════════
+// LISTENERS — substituem onclick/ondblclick inline
+// (necessário por causa da CSP sem 'unsafe-inline')
+// ══════════════════════════════════════════════
+document.getElementById('adminTrigger').addEventListener('dblclick', tentarAdmin);
+document.getElementById('btnDark').addEventListener('click', toggleDark);
+document.getElementById('btnAnunciar').addEventListener('click', abrirModal);
+
 function esc(str) {
   return String(str == null ? '' : str)
     .replace(/&/g, '&amp;')
