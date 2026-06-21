@@ -2,6 +2,37 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
+<!-- ══════════════════════════════════════════════════════════════════
+     CONTENT SECURITY POLICY — hashes gerados automaticamente
+     Ao alterar qualquer <script> inline, recalcule os hashes com:
+       python3 -c "
+         import hashlib, base64
+         txt = open('index.html').read()
+         # extraia o conteúdo do script e calcule:
+         h = hashlib.sha256(conteudo.encode()).digest()
+         print('sha256-' + base64.b64encode(h).decode())
+       "
+     ════════════════════════════════════════════════════════════════ -->
+<meta http-equiv="Content-Security-Policy" content="
+    default-src 'self';
+  script-src
+    'self'
+    'sha256-rcIdlhIZHgyhuhHw5meq1HKpe7rvk1mTCysIr45RUHI='
+    'sha256-DHdfyKiBmLeVLuIfUykwVXkTKGMxmHlEXHevMgWKHdI='
+    'sha256-/q977lygXRJKefYlrqS1t7vz6EXqXDhrH0ZxtVYbGmI='
+    https://www.gstatic.com;
+  connect-src
+    'self'
+    https://firestore.googleapis.com
+    https://*.googleapis.com
+    https://*.firebaseio.com
+    wss://*.firebaseio.com;
+  img-src 'self' data: blob: https:;
+  style-src 'self' 'unsafe-inline';
+  frame-ancestors 'none';
+  base-uri 'self';
+  form-action 'self';
+">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Mercado ON — Compre e venda no seu bairro</title>
 <meta name="description" content="Encontre produtos e serviços perto de você. Marmitas, doces, roupas, beleza e muito mais no seu bairro.">
@@ -12,11 +43,11 @@
 <meta name="apple-mobile-web-app-title" content="Mercado ON">
 
 <!-- Favicon -->
-<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
 <link rel="icon" type="image/x-icon" href="favicon.ico">
-<link rel="apple-touch-icon" href="icons/icon-192x192.png">
-<link rel="apple-touch-icon" sizes="152x152" href="icons/icon-152x152.png">
-<link rel="apple-touch-icon" sizes="192x192" href="icons/icon-192x192.png">
+<link rel="apple-touch-icon" href="icon-192x192.png">
+<link rel="apple-touch-icon" sizes="152x152" href="icon-152x152.png">
+<link rel="apple-touch-icon" sizes="192x192" href="icon-192x192.png">
 
 <!-- PWA Manifest -->
 <link rel="manifest" href="manifest.json">
@@ -26,14 +57,14 @@
 <meta property="og:site_name"   content="Mercado ON">
 <meta property="og:title"       content="Mercado ON — Compre e venda no seu bairro">
 <meta property="og:description" content="Encontre marmitas, doces, roupas, beleza e serviços perto de você. Anuncie grátis!">
-<meta property="og:image"       content="icons/icon-512x512.png">
+<meta property="og:image"       content="icon-512x512.png">
 <meta property="og:image:width"  content="512">
 <meta property="og:image:height" content="512">
 <meta property="og:url"         content="https://mercado--on.web.app">
 <meta name="twitter:card"        content="summary_large_image">
 <meta name="twitter:title"       content="Mercado ON">
 <meta name="twitter:description" content="Compre e venda no seu bairro.">
-<meta name="twitter:image"       content="icons/icon-512x512.png">
+<meta name="twitter:image"       content="icon-512x512.png">
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -54,7 +85,13 @@
   const app = initializeApp(firebaseConfig);
   const db  = getFirestore(app);
 
-  window._fbReady = { db, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, deleteDoc, doc };
+  // Expõe as funções Firebase de forma protegida (somente-leitura, não enumerável)
+  Object.defineProperty(window, '_fbReady', {
+    value: Object.freeze({ db, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, deleteDoc, doc }),
+    writable:     false,
+    configurable: false,
+    enumerable:   false   // não aparece em Object.keys(window) — dificulta descoberta
+  });
   document.dispatchEvent(new Event("fbReady"));
 </script>
 
@@ -1147,6 +1184,20 @@
 
 <script>
 // ══════════════════════════════════════════════
+// SEGURANÇA — sanitização contra XSS
+// Sempre use esc() ao inserir dados do Firestore via innerHTML
+// ══════════════════════════════════════════════
+function esc(str) {
+  return String(str == null ? '' : str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+    .replace(/`/g, '&#x60;');
+}
+
+// ══════════════════════════════════════════════
 // ESTADO GLOBAL
 // ══════════════════════════════════════════════
 let todosAnuncios = [];
@@ -1436,33 +1487,33 @@ function cardHTML(a) {
   }
 
   return `
-  <div class="card ${classePrio}" onclick="abrirDetalhe('${a.id}')">
+  <div class="card ${classePrio}" onclick="abrirDetalhe('${esc(a.id)}')">
     <div class="card-header-area">
       <div class="card-fotos">${fotosInner}</div>
       ${dotsInner}
-      <div class="badge-bairro">${a.bairro||''}</div>
+      <div class="badge-bairro">${esc(a.bairro)}</div>
       ${badgePrio}
       ${logoImg}
     </div>
     <div class="card-body" style="${a.logo?'padding-top:26px':''}">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:4px;margin-bottom:2px">
-        <div class="card-nome" style="margin-bottom:0">${a.nome}</div>
+        <div class="card-nome" style="margin-bottom:0">${esc(a.nome)}</div>
         ${viewsHTML}
       </div>
       ${ratingHTML}
       ${validadeHTML}
       ${horarioHTML(a)}
-      <div class="card-desc">${a.descricao||''}</div>
+      <div class="card-desc">${esc(a.descricao)}</div>
       <div class="card-footer">
         <a class="btn-zap" href="${zapURL}" target="_blank" onclick="event.stopPropagation()">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
           Falar
         </a>
         <div style="display:flex;align-items:center;gap:6px">
-          <button class="btn-share-card" onclick="event.stopPropagation();abrirCompartilhar('${a.id}')" title="Compartilhar">
+          <button class="btn-share-card" onclick="event.stopPropagation();abrirCompartilhar('${esc(a.id)}')" title="Compartilhar">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
           </button>
-          <span class="tag-cat">${(a.categoria||'').split(' ')[0]}</span>
+          <span class="tag-cat">${esc((a.categoria||'').split(' ')[0])}</span>
         </div>
       </div>
     </div>
@@ -1533,19 +1584,19 @@ function abrirDetalhe(id) {
   const zapAdmin = `https://wa.me/55${numAdmin}?text=${txtSolicitar}`;
 
   document.getElementById('detalheConteudo').innerHTML = `
-    ${fts.length?`<div class="detalhe-fotos">${fts.map(f=>`<img src="${f}">`).join('')}</div>`:''}
+    ${fts.length?`<div class="detalhe-fotos">${fts.map(f=>`<img src="${esc(f)}">`).join('')}</div>`:''}
     <div class="detalhe-header">
       ${logoTag}
       <div style="flex:1;min-width:0">
-        <h2 style="font-size:1.2rem;font-weight:800;margin-bottom:2px">${a.nome}</h2>
-        <div style="font-size:.83rem;color:var(--sub)">📍 ${a.bairro} · ${a.categoria||''}</div>
+        <h2 style="font-size:1.2rem;font-weight:800;margin-bottom:2px">${esc(a.nome)}</h2>
+        <div style="font-size:.83rem;color:var(--sub)">📍 ${esc(a.bairro)} · ${esc(a.categoria)}</div>
         ${horarioDetalhe ? `<div style="margin-top:4px">${horarioDetalhe}</div>` : ''}
         ${ratingDetalhe}
         ${validadeDetalhe}
         <div style="font-size:.72rem;color:var(--sub);margin-top:4px">👁 ${views} visualizaç${views===1?'ão':'ões'}</div>
       </div>
     </div>
-    <p style="font-size:.95rem;line-height:1.65;margin-bottom:20px">${(a.descricao||'').replace(/\n/g,'<br>')}</p>
+    <p style="font-size:.95rem;line-height:1.65;margin-bottom:20px">${esc(a.descricao||'').replace(/\n/g,'<br>')}</p>
 
     <a class="btn-zap" href="${zapURL}" target="_blank"
        style="display:flex;font-size:1rem;padding:14px 24px;border-radius:14px;justify-content:center;width:100%;margin-bottom:10px">
@@ -1554,16 +1605,16 @@ function abrirDetalhe(id) {
     </a>
 
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
-      <button class="btn-share-detalhe" style="margin-bottom:0" onclick="abrirCompartilhar('${a.id}')">
+      <button class="btn-share-detalhe" style="margin-bottom:0" onclick="abrirCompartilhar('${esc(a.id)}')">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
         Compartilhar
       </button>
-      <button class="btn-share-detalhe" style="margin-bottom:0" onclick="abrirAvaliar('${a.id}')">
+      <button class="btn-share-detalhe" style="margin-bottom:0" onclick="abrirAvaliar('${esc(a.id)}')">
         ⭐ Avaliar
       </button>
     </div>
 
-    <button class="btn-share-detalhe" style="margin-bottom:10px" onclick="abrirPerfil('${a.id}')">
+    <button class="btn-share-detalhe" style="margin-bottom:10px" onclick="abrirPerfil('${esc(a.id)}')">
       🏪 Ver todos os anúncios deste vendedor
     </button>`;
 
@@ -1704,7 +1755,17 @@ async function salvar() {
 // ══════════════════════════════════════════════
 // ADMIN — GATILHO OCULTO
 // ══════════════════════════════════════════════
+// Controle de tentativas (rate limiting cliente-side)
+let _adminTentativas = 0;
+let _adminBloqueadoAte = 0;
+
 function tentarAdmin() {
+  const agora = Date.now();
+  if (agora < _adminBloqueadoAte) {
+    const restSec = Math.ceil((_adminBloqueadoAte - agora) / 1000);
+    showToast(`🔒 Muitas tentativas. Aguarde ${restSec}s`);
+    return;
+  }
   document.getElementById('inputChave').value='';
   document.getElementById('inputChave').classList.remove('erro');
   document.getElementById('overlayChave').classList.add('aberto');
@@ -1712,20 +1773,54 @@ function tentarAdmin() {
 }
 
 async function confirmarChave() {
+  const agora = Date.now();
+  if (agora < _adminBloqueadoAte) {
+    const restSec = Math.ceil((_adminBloqueadoAte - agora) / 1000);
+    showToast(`🔒 Bloqueado. Aguarde ${restSec}s`);
+    return;
+  }
+
   const v = document.getElementById('inputChave').value.trim();
-  const enc = new TextEncoder().encode(v);
+  if (!v) return;
+
+  // Salt fixo — impede ataques por rainbow table
+  const SALT = 'mercado-on-2026-manaus';
+  const enc = new TextEncoder().encode(v + SALT);
   const buf = await crypto.subtle.digest('SHA-256', enc);
   const hash = Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
-  const ADMIN_HASH = 'd3ecc5b7fe38ffd3397473362f2c42321fb82deb23083ed13cf6f20320ab6c92';
+
+  // ADMIN_HASH = SHA256(sua_senha + 'mercado-on-2026-manaus')
+  // Para gerar novo hash: abra o console e execute:
+  //   const e=new TextEncoder(),s='mercado-on-2026-manaus';
+  //   crypto.subtle.digest('SHA-256',e.encode('SUA_SENHA'+s))
+  //     .then(b=>console.log([...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')))
+  const ADMIN_HASH = '99e00f9e877d7c20062ec53a10212d6d139a78ec9ea6d1a13f5b80de4bdbe579';
+
   if (hash === ADMIN_HASH) {
+    _adminTentativas = 0;
+    _adminBloqueadoAte = 0;
     document.getElementById('overlayChave').classList.remove('aberto');
     abrirAdmin();
   } else {
+    _adminTentativas++;
     const inp = document.getElementById('inputChave');
     inp.classList.add('erro');
     inp.value='';
     setTimeout(()=>inp.classList.remove('erro'), 400);
-    showToast('❌ Palavra-chave incorreta');
+
+    // Progressivo: 3 erros = 30s, 6 erros = 5min, 9+ erros = 30min
+    if (_adminTentativas >= 9) {
+      _adminBloqueadoAte = Date.now() + 30 * 60 * 1000;
+      showToast('🔒 Bloqueado por 30 minutos');
+    } else if (_adminTentativas >= 6) {
+      _adminBloqueadoAte = Date.now() + 5 * 60 * 1000;
+      showToast('🔒 Bloqueado por 5 minutos');
+    } else if (_adminTentativas >= 3) {
+      _adminBloqueadoAte = Date.now() + 30 * 1000;
+      showToast(`❌ Incorreta. Bloqueado por 30s (${_adminTentativas}/9)`);
+    } else {
+      showToast(`❌ Palavra-chave incorreta (${_adminTentativas}/9)`);
+    }
   }
 }
 
@@ -1762,19 +1857,19 @@ function abrirAdmin() {
     lista.innerHTML = todosAnuncios.map(a=>`
       <div class="admin-card-item">
         <div class="admin-card-logo">
-          ${a.logo?`<img src="${a.logo}" alt="logo">`:'🛒'}
+          ${a.logo?`<img src="${esc(a.logo)}" alt="logo">`:'🛒'}
         </div>
         <div class="admin-card-info">
-          <strong>${a.nome}</strong>
-          <span>${a.bairro} · ${(a.categoria||'').split(' ').slice(0,2).join(' ')}</span>
+          <strong>${esc(a.nome)}</strong>
+          <span>${esc(a.bairro)} · ${esc((a.categoria||'').split(' ').slice(0,2).join(' '))}</span>
           <span style="font-size:.72rem;color:var(--sub)">👁 ${visualizacoes[a.id]||0} visitas${avaliacoes[a.id]?' · ⭐ '+avaliacoes[a.id].media.toFixed(1)+' ('+avaliacoes[a.id].count+')':''}</span>
         </div>
         <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
           <button class="btn-prio-toggle btn-prio-diario ${prioridadeValida(a.id,Date.now())&&prioridades[a.id]?.tipo==='diario'?'ativo':''}"
-            onclick="ativarPrioridade('${a.id}','diario')">☀️ Dia</button>
+            onclick="ativarPrioridade('${esc(a.id)}','diario')">☀️ Dia</button>
           <button class="btn-prio-toggle btn-prio-semanal ${prioridadeValida(a.id,Date.now())&&prioridades[a.id]?.tipo==='semanal'?'ativo':''}"
-            onclick="ativarPrioridade('${a.id}','semanal')">📅 Sem.</button>
-          <button class="btn-excluir" onclick="excluirAnuncio('${a.id}')">Excluir</button>
+            onclick="ativarPrioridade('${esc(a.id)}','semanal')">📅 Sem.</button>
+          <button class="btn-excluir" onclick="excluirAnuncio('${esc(a.id)}')">Excluir</button>
         </div>
       </div>`).join('');
   }
@@ -1803,15 +1898,15 @@ function renderizarPrioridades() {
     const tempo = restH > 0 ? `${restH}h${restM}min restantes` : `${restM}min restantes`;
     return `
     <div class="prioridade-item ${isSemanal?'ativo-semanal':'ativo-diario'}">
-      <div class="prioridade-logo">${a.logo?`<img src="${a.logo}">`:'🛒'}</div>
+      <div class="prioridade-logo">${a.logo?`<img src="${esc(a.logo)}">`:'🛒'}</div>
       <div class="prioridade-info">
-        <strong>${a.nome}</strong>
-        <span>${a.bairro} · ${(a.categoria||'').split(' ').slice(0,2).join(' ')}</span>
+        <strong>${esc(a.nome)}</strong>
+        <span>${esc(a.bairro)} · ${esc((a.categoria||'').split(' ').slice(0,2).join(' '))}</span>
         <div class="prio-vencimento ${isSemanal?'semanal':'diario'}">
           ${isSemanal?'📅':'☀️'} ${isSemanal?'Semanal':'Diário'} · ⏱ ${tempo}
         </div>
       </div>
-      <button class="btn-prio-remover" onclick="removerPrioridade('${a.id}')">Remover</button>
+      <button class="btn-prio-remover" onclick="removerPrioridade('${esc(a.id)}')">Remover</button>
     </div>`;
   }).join('');
 }
@@ -1948,16 +2043,16 @@ function abrirPerfil(refId) {
 
   const cardsHTML = anunciosVendedor.map(a => {
     const fts = (a.fotos||[]).filter(Boolean);
-    const img = fts.length ? `<img src="${fts[0]}" style="width:56px;height:56px;object-fit:cover;border-radius:10px;flex-shrink:0;border:2px solid var(--borda)">` : `<div style="width:56px;height:56px;border-radius:10px;background:var(--fundo);display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0">🛒</div>`;
+    const img = fts.length ? `<img src="${esc(fts[0])}" style="width:56px;height:56px;object-fit:cover;border-radius:10px;flex-shrink:0;border:2px solid var(--borda)">` : `<div style="width:56px;height:56px;border-radius:10px;background:var(--fundo);display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0">🛒</div>`;
     const av = avaliacoes[a.id];
     const ratingMini = av ? `<span style="font-size:.72rem;color:#F59E0B">⭐ ${av.media.toFixed(1)} (${av.count})</span>` : '';
     const views = visualizacoes[a.id]||0;
     return `
-    <div style="display:flex;gap:10px;align-items:center;padding:10px;background:var(--fundo);border-radius:12px;margin-bottom:8px;cursor:pointer" onclick="fecharPerfil();setTimeout(()=>abrirDetalhe('${a.id}'),200)">
+    <div style="display:flex;gap:10px;align-items:center;padding:10px;background:var(--fundo);border-radius:12px;margin-bottom:8px;cursor:pointer" onclick="fecharPerfil();setTimeout(()=>abrirDetalhe('${esc(a.id)}'),200)">
       ${img}
       <div style="flex:1;min-width:0">
-        <div style="font-weight:700;font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.nome}</div>
-        <div style="font-size:.75rem;color:var(--sub)">${a.bairro} · ${(a.categoria||'').replace(/^\S+\s/,'')}</div>
+        <div style="font-weight:700;font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(a.nome)}</div>
+        <div style="font-size:.75rem;color:var(--sub)">${esc(a.bairro)} · ${esc((a.categoria||'').replace(/^\S+\s/,''))}</div>
         <div style="display:flex;gap:8px;align-items:center;margin-top:2px">${ratingMini}<span style="font-size:.72rem;color:var(--sub)">👁 ${views}</span></div>
       </div>
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--sub)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
@@ -1968,8 +2063,8 @@ function abrirPerfil(refId) {
     <div class="perfil-header">
       ${logoHTML}
       <div>
-        <div class="perfil-nome">${ref.nome.split(' ').slice(0,3).join(' ')}</div>
-        <div class="perfil-meta">📍 ${ref.bairro} · ${anunciosVendedor.length} anúncio${anunciosVendedor.length!==1?'s':''}</div>
+        <div class="perfil-nome">${esc(ref.nome.split(' ').slice(0,3).join(' '))}</div>
+        <div class="perfil-meta">📍 ${esc(ref.bairro)} · ${anunciosVendedor.length} anúncio${anunciosVendedor.length!==1?'s':''}</div>
         <div class="perfil-rating"><span style="color:#F59E0B">${starsGeral}</span></div>
       </div>
     </div>
