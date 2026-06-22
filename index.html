@@ -18,9 +18,9 @@
   script-src
     'self'
     'unsafe-hashes'
-    'sha256-rcIdlhIZHgyhuhHw5meq1HKpe7rvk1mTCysIr45RUHI='
-    'sha256-AKDSZd+0xaXCY844gA1+tyFbddoL3dM2tlWPaX88zzI='
-    'sha256-/q977lygXRJKefYlrqS1t7vz6EXqXDhrH0ZxtVYbGmI='
+    'sha256-7hR2wVKaLMG5OatHM0UgTwMUYhatqvZ/Lw5u7qHYUno='
+    'sha256-kUPDOjab/Eu9C6p99JOP31qSsE7mNUyfixGnxWcqdRc='
+    'sha256-XgadFsjAe07J3Y46Uj0KcyD2lRQRjQj3R2/Wngl3VSQ='
     https://www.gstatic.com;
   connect-src
     'self'
@@ -855,35 +855,35 @@
   <h1>O mercado do seu<br>bairro está <span style="color:var(--on)">ON</span> 🟢</h1>
   <p>Compre e venda no seu bairro direto pelo WhatsApp</p>
   <div class="search-wrap">
-    <input type="text" id="busca" placeholder="Buscar no Mercado ON…" oninput="filtrar()">
+    <input type="text" id="busca" placeholder="Buscar no Mercado ON…">
   </div>
 </div>
 
 <!-- CHIPS BAIRRO -->
 <div class="bairros-wrap">
   <div class="bairros-scroll" id="chipsBairros">
-    <div class="chip ativo" data-bairro="" onclick="selecionarBairro(this,'')">📍 Todos</div>
+    <div class="chip ativo" id="chipTodosBairro" data-bairro="">📍 Todos</div>
   </div>
 </div>
 
 <!-- CHIPS CATEGORIA + ABERTO -->
 <div class="categorias-wrap">
   <div class="bairros-scroll" id="chipsCategoria">
-    <div class="cat-chip ativo" onclick="selecionarCategoria(this,'')">🔍 Todas</div>
-    <div class="cat-chip chip-aberto" onclick="toggleAberto(this)">🟢 Aberto agora</div>
-    <div class="cat-chip" onclick="selecionarCategoria(this,'🍱')">🍱 Marmitas</div>
-    <div class="cat-chip" onclick="selecionarCategoria(this,'🍰')">🍰 Doces</div>
-    <div class="cat-chip" onclick="selecionarCategoria(this,'🥤')">🥤 Bebidas</div>
-    <div class="cat-chip" onclick="selecionarCategoria(this,'🧴')">🧴 Beleza</div>
-    <div class="cat-chip" onclick="selecionarCategoria(this,'👗')">👗 Roupas</div>
-    <div class="cat-chip" onclick="selecionarCategoria(this,'🔧')">🔧 Serviços</div>
-    <div class="cat-chip" onclick="selecionarCategoria(this,'📦')">📦 Outros</div>
+    <div class="cat-chip ativo" data-cat="">🔍 Todas</div>
+    <div class="cat-chip chip-aberto" data-action="toggle-aberto">🟢 Aberto agora</div>
+    <div class="cat-chip" data-cat="🍱">🍱 Marmitas</div>
+    <div class="cat-chip" data-cat="🍰">🍰 Doces</div>
+    <div class="cat-chip" data-cat="🥤">🥤 Bebidas</div>
+    <div class="cat-chip" data-cat="🧴">🧴 Beleza</div>
+    <div class="cat-chip" data-cat="👗">👗 Roupas</div>
+    <div class="cat-chip" data-cat="🔧">🔧 Serviços</div>
+    <div class="cat-chip" data-cat="📦">📦 Outros</div>
   </div>
 </div>
 
 <!-- BANNER SOLICITAR ANUNCIO -->
 <div style="max-width:700px;margin:10px auto 0;padding:0 16px">
-  <div onclick="abrirModalDestaque()" style="display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#D97706,#F59E0B);border-radius:14px;padding:12px 16px;cursor:pointer;color:#fff">
+  <div id="bannerDestaque" style="display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#D97706,#F59E0B);border-radius:14px;padding:12px 16px;cursor:pointer;color:#fff">
     <div style="font-size:1.5rem;flex-shrink:0">⭐</div>
     <div style="flex:1">
       <div style="font-weight:800;font-size:.9rem">Coloque seu anúncio em destaque!</div>
@@ -905,7 +905,7 @@
 <div class="toast" id="toast"></div>
 
 <!-- ══ MODAL CADASTRO ══ -->
-<div class="overlay" id="overlay" onclick="fecharSeClicarFora(event)">
+<div class="overlay" id="overlay">
   <div class="modal" id="modal">
     <div class="modal-handle"></div>
     <h2>📦 Anunciar no Mercado ON</h2>
@@ -918,17 +918,17 @@
     <div class="campo">
       <label>Logomarca da loja</label>
       <div class="logo-upload-area">
-        <div class="logo-preview-box" id="logoBox" onclick="clicarLogo()">
+        <div class="logo-preview-box" id="logoBox">
           <span class="logo-add-icon">🏪</span>
           <img id="logoPrev" src="">
-          <button class="logo-remover" onclick="removerLogo(event)">✕</button>
+          <button class="logo-remover" id="btnRemoverLogo">✕</button>
         </div>
         <div class="logo-upload-hint">
           Adicione a logo ou foto da sua loja.<br>
           <small style="color:#9CA3AF">Aparece no card e no perfil.</small>
         </div>
       </div>
-      <input type="file" id="logoInput" accept="image/*" style="display:none" onchange="onLogoSelecionada(event)">
+      <input type="file" id="logoInput" accept="image/*" style="display:none">
     </div>
 
     <div class="campo">
@@ -980,45 +980,45 @@
     <div class="campo">
       <label>Fotos dos produtos (até 3)</label>
       <div class="fotos-grid">
-        <div class="foto-slot" id="slot0" onclick="clicarFoto(0)">
+        <div class="foto-slot" id="slot0">
           <span class="add-icon">📷</span>
           <img id="prev0" src="">
-          <button class="remover" onclick="removerFoto(event,0)">✕</button>
+          <button class="remover" id="btnRemoverFoto0">✕</button>
         </div>
-        <div class="foto-slot" id="slot1" onclick="clicarFoto(1)">
+        <div class="foto-slot" id="slot1">
           <span class="add-icon">📷</span>
           <img id="prev1" src="">
-          <button class="remover" onclick="removerFoto(event,1)">✕</button>
+          <button class="remover" id="btnRemoverFoto1">✕</button>
         </div>
-        <div class="foto-slot" id="slot2" onclick="clicarFoto(2)">
+        <div class="foto-slot" id="slot2">
           <span class="add-icon">📷</span>
           <img id="prev2" src="">
-          <button class="remover" onclick="removerFoto(event,2)">✕</button>
+          <button class="remover" id="btnRemoverFoto2">✕</button>
         </div>
       </div>
-      <input type="file" id="fileInput" accept="image/*" style="display:none" onchange="onFotoSelecionada(event)">
+      <input type="file" id="fileInput" accept="image/*" style="display:none">
     </div>
 
-    <button class="btn-salvar" id="btnSalvar" onclick="salvar()">Publicar anúncio</button>
-    <button class="btn-cancelar" onclick="fecharModal()">Cancelar</button>
+    <button class="btn-salvar" id="btnSalvar">Publicar anúncio</button>
+    <button class="btn-cancelar" id="btnCancelarModal">Cancelar</button>
   </div>
 </div>
 
 <!-- ══ MODAL DETALHE ══ -->
-<div class="overlay" id="overlayDetalhe" onclick="fecharDetalheSeClicarFora(event)">
+<div class="overlay" id="overlayDetalhe">
   <div class="modal" id="modalDetalhe">
     <div class="modal-handle"></div>
     <div id="detalheConteudo"></div>
-    <button class="btn-cancelar" style="margin-top:4px" onclick="fecharDetalhe()">Fechar</button>
+    <button class="btn-cancelar" id="btnFecharDetalhe" style="margin-top:4px">Fechar</button>
   </div>
 </div>
 
 <!-- ══ MODAL PERFIL DO VENDEDOR ══ -->
-<div class="overlay-perfil" id="overlayPerfil" onclick="fecharPerfilFora(event)">
+<div class="overlay-perfil" id="overlayPerfil">
   <div class="modal-perfil">
     <div class="modal-handle"></div>
     <div id="perfilConteudo"></div>
-    <button class="btn-cancelar" style="margin-top:8px" onclick="fecharPerfil()">Fechar</button>
+    <button class="btn-cancelar" id="btnFecharPerfil" style="margin-top:8px">Fechar</button>
   </div>
 </div>
 
@@ -1030,16 +1030,16 @@
     <p id="avaliarNome" style="font-weight:700;color:var(--texto);margin-bottom:2px"></p>
     <p>Como foi sua experiência?</p>
     <div class="star-select" id="starSelect">
-      <button class="star-btn" data-v="1" onclick="selecionarEstrela(1)">⭐</button>
-      <button class="star-btn" data-v="2" onclick="selecionarEstrela(2)">⭐</button>
-      <button class="star-btn" data-v="3" onclick="selecionarEstrela(3)">⭐</button>
-      <button class="star-btn" data-v="4" onclick="selecionarEstrela(4)">⭐</button>
-      <button class="star-btn" data-v="5" onclick="selecionarEstrela(5)">⭐</button>
+      <button class="star-btn" data-v="1">⭐</button>
+      <button class="star-btn" data-v="2">⭐</button>
+      <button class="star-btn" data-v="3">⭐</button>
+      <button class="star-btn" data-v="4">⭐</button>
+      <button class="star-btn" data-v="5">⭐</button>
     </div>
     <textarea id="avaliarComentario" placeholder="Comentário opcional…" maxlength="200"
       style="width:100%;border:2px solid var(--borda);border-radius:10px;padding:10px;font-size:.9rem;font-family:inherit;resize:none;min-height:70px;background:var(--fundo);color:var(--texto);outline:none;margin-bottom:12px"></textarea>
-    <button class="btn-salvar" style="margin-top:0" onclick="enviarAvaliacao()">Enviar avaliação</button>
-    <button class="btn-cancelar" style="margin-top:8px" onclick="fecharAvaliar()">Cancelar</button>
+    <button class="btn-salvar" id="btnEnviarAvaliacao" style="margin-top:0">Enviar avaliação</button>
+    <button class="btn-cancelar" id="btnCancelarAvaliar" style="margin-top:8px">Cancelar</button>
   </div>
 </div>
 
@@ -1049,15 +1049,14 @@
     <div class="lock-icon">🔐</div>
     <h3>Área Restrita</h3>
     <p>Digite a palavra-chave para acessar o painel administrativo.</p>
-    <input type="password" id="inputChave" placeholder="••••••••"
-      onkeydown="if(event.key==='Enter')confirmarChave()">
-    <button class="btn-confirmar-chave" onclick="confirmarChave()">Entrar</button>
-    <button class="btn-fechar-chave" onclick="fecharChave()">Cancelar</button>
+    <input type="password" id="inputChave" placeholder="••••••••">
+    <button class="btn-confirmar-chave" id="btnConfirmarChave">Entrar</button>
+    <button class="btn-fechar-chave" id="btnFecharChave">Cancelar</button>
   </div>
 </div>
 
 <!-- ══ MODAL ADMIN PAINEL ══ -->
-<div class="overlay" id="overlayAdmin" onclick="fecharAdminSeClicarFora(event)">
+<div class="overlay" id="overlayAdmin">
   <div class="modal admin-modal" id="modalAdmin">
     <div class="modal-handle"></div>
     <h2>⚙️ Painel Administrativo</h2>
@@ -1072,7 +1071,7 @@
     <div class="admin-titulo">Anúncios cadastrados</div>
     <div id="adminLista"></div>
 
-    <button class="btn-cancelar" style="margin-top:8px" onclick="fecharAdmin()">Fechar painel</button>
+    <button class="btn-cancelar" id="btnFecharAdmin" style="margin-top:8px">Fechar painel</button>
   </div>
 </div>
 
@@ -1084,7 +1083,7 @@
     <p style="font-size:.83rem;color:var(--sub);margin-bottom:16px">Seu anúncio aparece em <strong>primeiro lugar</strong> para todo mundo que abrir o app!</p>
 
     <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:18px">
-      <div onclick="escolherPlanoDestaque('diario')" id="planoDiario"
+      <div id="planoDiario"
         style="border:2px solid #F59E0B;border-radius:14px;padding:14px;cursor:pointer;text-align:left;background:#FFFBEB;transition:all .15s">
         <div style="display:flex;align-items:center;justify-content:space-between">
           <div>
@@ -1095,7 +1094,7 @@
         </div>
       </div>
 
-      <div onclick="escolherPlanoDestaque('semanal')" id="planoSemanal"
+      <div id="planoSemanal"
         style="border:2px solid #8B5CF6;border-radius:14px;padding:14px;cursor:pointer;text-align:left;background:#F5F3FF;transition:all .15s">
         <div style="display:flex;align-items:center;justify-content:space-between">
           <div>
@@ -1114,13 +1113,13 @@
       💬 Após escolher, você será direcionado ao WhatsApp para combinar o pagamento. Assim que confirmado, ativo o destaque!
     </div>
 
-    <button class="btn-salvar" style="margin-top:0" onclick="solicitarDestaque()">Quero o destaque! 🚀</button>
-    <button class="btn-cancelar" style="margin-top:8px" onclick="fecharModalDestaque()">Agora não</button>
+    <button class="btn-salvar" id="btnSolicitarDestaque" style="margin-top:0">Quero o destaque! 🚀</button>
+    <button class="btn-cancelar" id="btnFecharModalDestaque" style="margin-top:8px">Agora não</button>
   </div>
 </div>
 
 <!-- ══ MODAL COMPARTILHAR ══ -->
-<div class="overlay-compartilhar" id="overlayCompartilhar" onclick="fecharCompartilharFora(event)">
+<div class="overlay-compartilhar" id="overlayCompartilhar">
   <div class="modal-compartilhar">
     <div class="modal-handle"></div>
     <h3>📤 Compartilhar anúncio</h3>
@@ -1132,47 +1131,47 @@
     <!-- link copiável -->
     <div class="share-link-box">
       <input type="text" id="shareLinkInput" readonly>
-      <button class="btn-copiar-link" onclick="copiarLink()">Copiar</button>
+      <button class="btn-copiar-link" id="btnCopiarLink">Copiar</button>
     </div>
 
     <!-- destinos -->
     <div class="share-destinos">
-      <button class="btn-destino wpp" onclick="compartilharWpp()">
+      <button class="btn-destino wpp" data-action="wpp">
         <div class="dest-icon">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
         </div>
         <div><div class="dest-label">WhatsApp</div><div class="dest-sub">Grupos e contatos</div></div>
       </button>
 
-      <button class="btn-destino face" onclick="compartilharFacebook()">
+      <button class="btn-destino face" data-action="face">
         <div class="dest-icon">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
         </div>
         <div><div class="dest-label">Facebook</div><div class="dest-sub">Feed e grupos</div></div>
       </button>
 
-      <button class="btn-destino insta" onclick="compartilharInstagram()">
+      <button class="btn-destino insta" data-action="insta">
         <div class="dest-icon">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
         </div>
         <div><div class="dest-label">Instagram</div><div class="dest-sub">Stories e feed</div></div>
       </button>
 
-      <button class="btn-destino tele" onclick="compartilharTelegram()">
+      <button class="btn-destino tele" data-action="tele">
         <div class="dest-icon">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.96 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
         </div>
         <div><div class="dest-label">Telegram</div><div class="dest-sub">Grupos e canais</div></div>
       </button>
 
-      <button class="btn-destino copiar" onclick="copiarTextoCompleto()">
+      <button class="btn-destino copiar" data-action="copiar-texto">
         <div class="dest-icon">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
         </div>
         <div><div class="dest-label">Copiar texto</div><div class="dest-sub">Para colar em qualquer lugar</div></div>
       </button>
 
-      <button class="btn-destino outros" onclick="compartilharNativo()">
+      <button class="btn-destino outros" data-action="nativo">
         <div class="dest-icon">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/></svg>
         </div>
@@ -1180,7 +1179,7 @@
       </button>
     </div>
 
-    <button class="btn-cancelar" onclick="fecharCompartilhar()">Fechar</button>
+    <button class="btn-cancelar" id="btnFecharCompartilhar">Fechar</button>
   </div>
 </div>
 
@@ -1190,21 +1189,149 @@
 // Sempre use esc() ao inserir dados do Firestore via innerHTML
 // ══════════════════════════════════════════════
 // ══════════════════════════════════════════════
-// LISTENERS — substituem onclick/ondblclick inline
+// LISTENERS — substituem onclick/onchange/oninput/onkeydown inline
 // (necessário por causa da CSP sem 'unsafe-inline')
 // ══════════════════════════════════════════════
 document.getElementById('adminTrigger').addEventListener('dblclick', () => {
-  try { tentarAdmin(); }
-  catch(e) { alert('ERRO no admin: ' + e.message); console.error(e); }
+  try { tentarAdmin(); } catch(e) { console.error(e); }
 });
 document.getElementById('btnDark').addEventListener('click', () => {
-  try { toggleDark(); }
-  catch(e) { alert('ERRO no dark mode: ' + e.message); console.error(e); }
+  try { toggleDark(); } catch(e) { console.error(e); }
 });
 document.getElementById('btnAnunciar').addEventListener('click', () => {
-  alert('Botão clicado! Tentando abrir modal...');
-  try { abrirModal(); alert('abrirModal() rodou sem erro.'); }
-  catch(e) { alert('ERRO no anunciar: ' + e.message); console.error(e); }
+  try { abrirModal(); } catch(e) { console.error(e); }
+});
+
+// busca
+document.getElementById('busca').addEventListener('input', filtrar);
+
+// chips bairro/categoria
+document.getElementById('chipTodosBairro').addEventListener('click', function(){ selecionarBairro(this, ''); });
+document.getElementById('chipsCategoria').addEventListener('click', e => {
+  const chip = e.target.closest('.cat-chip');
+  if (!chip) return;
+  if (chip.dataset.action === 'toggle-aberto') { toggleAberto(chip); return; }
+  selecionarCategoria(chip, chip.dataset.cat || '');
+});
+
+// banner destaque
+document.getElementById('bannerDestaque').addEventListener('click', abrirModalDestaque);
+
+// modal cadastro
+document.getElementById('overlay').addEventListener('click', fecharSeClicarFora);
+document.getElementById('logoBox').addEventListener('click', clicarLogo);
+document.getElementById('btnRemoverLogo').addEventListener('click', removerLogo);
+document.getElementById('logoInput').addEventListener('change', onLogoSelecionada);
+[0, 1, 2].forEach(i => {
+  document.getElementById('slot' + i).addEventListener('click', () => clicarFoto(i));
+  document.getElementById('btnRemoverFoto' + i).addEventListener('click', e => removerFoto(e, i));
+});
+document.getElementById('fileInput').addEventListener('change', onFotoSelecionada);
+document.getElementById('btnSalvar').addEventListener('click', salvar);
+document.getElementById('btnCancelarModal').addEventListener('click', fecharModal);
+
+// modal detalhe
+document.getElementById('overlayDetalhe').addEventListener('click', fecharDetalheSeClicarFora);
+document.getElementById('btnFecharDetalhe').addEventListener('click', fecharDetalhe);
+
+// modal perfil
+document.getElementById('overlayPerfil').addEventListener('click', fecharPerfilFora);
+document.getElementById('btnFecharPerfil').addEventListener('click', fecharPerfil);
+
+// modal avaliação
+document.getElementById('starSelect').addEventListener('click', e => {
+  const btn = e.target.closest('.star-btn');
+  if (!btn) return;
+  selecionarEstrela(Number(btn.dataset.v));
+});
+document.getElementById('btnEnviarAvaliacao').addEventListener('click', enviarAvaliacao);
+document.getElementById('btnCancelarAvaliar').addEventListener('click', fecharAvaliar);
+
+// senha admin
+document.getElementById('inputChave').addEventListener('keydown', e => {
+  if (e.key === 'Enter') confirmarChave();
+});
+document.getElementById('btnConfirmarChave').addEventListener('click', confirmarChave);
+document.getElementById('btnFecharChave').addEventListener('click', fecharChave);
+
+// painel admin
+document.getElementById('overlayAdmin').addEventListener('click', fecharAdminSeClicarFora);
+document.getElementById('btnFecharAdmin').addEventListener('click', fecharAdmin);
+
+// modal destaque
+document.getElementById('planoDiario').addEventListener('click', () => escolherPlanoDestaque('diario'));
+document.getElementById('planoSemanal').addEventListener('click', () => escolherPlanoDestaque('semanal'));
+document.getElementById('btnSolicitarDestaque').addEventListener('click', solicitarDestaque);
+document.getElementById('btnFecharModalDestaque').addEventListener('click', fecharModalDestaque);
+
+// modal compartilhar
+document.getElementById('overlayCompartilhar').addEventListener('click', fecharCompartilharFora);
+document.getElementById('btnCopiarLink').addEventListener('click', copiarLink);
+document.querySelector('.share-destinos').addEventListener('click', e => {
+  const btn = e.target.closest('.btn-destino');
+  if (!btn) return;
+  const acoes = {
+    wpp: compartilharWpp,
+    face: compartilharFacebook,
+    insta: compartilharInstagram,
+    tele: compartilharTelegram,
+    'copiar-texto': copiarTextoCompleto,
+    nativo: compartilharNativo
+  };
+  const fn = acoes[btn.dataset.action];
+  if (fn) fn();
+});
+document.getElementById('btnFecharCompartilhar').addEventListener('click', fecharCompartilhar);
+
+// ══════════════════════════════════════════════
+// DELEGAÇÃO — containers com conteúdo dinâmico
+// ══════════════════════════════════════════════
+
+// Cards da listagem principal
+document.getElementById('listaCards').addEventListener('click', e => {
+  // Botão compartilhar no card
+  const shareBtn = e.target.closest('[data-action="compartilharCard"]');
+  if (shareBtn) { e.stopPropagation(); abrirCompartilhar(shareBtn.dataset.id); return; }
+  // Link WhatsApp — deixa o browser abrir normalmente, só bloqueia a propagação pro card
+  if (e.target.closest('[data-action="zapLink"]')) { e.stopPropagation(); return; }
+  // Dots de foto
+  const dot = e.target.closest('[data-action="trocarFoto"]');
+  if (dot) { e.stopPropagation(); trocarFotoCard(e, dot.parentElement, Number(dot.dataset.idx)); return; }
+  // Card inteiro — abre detalhe
+  const card = e.target.closest('[data-action="abrirDetalhe"]');
+  if (card) { abrirDetalhe(card.dataset.id); }
+});
+
+// Modal detalhe — botões Compartilhar, Avaliar, Ver perfil
+document.getElementById('detalheConteudo').addEventListener('click', e => {
+  const btn = e.target.closest('[data-action]');
+  if (!btn) return;
+  const id = btn.dataset.id;
+  if (btn.dataset.action === 'compartilharDetalhe') { abrirCompartilhar(id); return; }
+  if (btn.dataset.action === 'avaliarDetalhe')      { abrirAvaliar(id);      return; }
+  if (btn.dataset.action === 'perfilDetalhe')       { abrirPerfil(id);       return; }
+});
+
+// Painel admin — botões Dia, Semana, Excluir
+document.getElementById('adminLista').addEventListener('click', e => {
+  const btn = e.target.closest('[data-action]');
+  if (!btn) return;
+  const id = btn.dataset.id;
+  if (btn.dataset.action === 'prioDiario')  { ativarPrioridade(id, 'diario');  return; }
+  if (btn.dataset.action === 'prioSemanal') { ativarPrioridade(id, 'semanal'); return; }
+  if (btn.dataset.action === 'excluir')     { excluirAnuncio(id);              return; }
+});
+
+// Painel admin — botão Remover destaque
+document.getElementById('adminPrioridadeLista').addEventListener('click', e => {
+  const btn = e.target.closest('[data-action="removerPrio"]');
+  if (btn) removerPrioridade(btn.dataset.id);
+});
+
+// Modal perfil do vendedor — clique em card abre detalhe
+document.getElementById('perfilConteudo').addEventListener('click', e => {
+  const card = e.target.closest('[data-action="abrirAnuncioPerfil"]');
+  if (card) { fecharPerfil(); setTimeout(() => abrirDetalhe(card.dataset.id), 200); }
 });
 
 function esc(str) {
@@ -1369,10 +1496,15 @@ function horarioHTML(a) {
 function atualizarChipsBairros() {
   const bairros = [...new Set(todosAnuncios.map(a=>a.bairro).filter(Boolean))].sort();
   const wrap = document.getElementById('chipsBairros');
-  wrap.innerHTML = `<div class="chip ${!bairroAtivo?'ativo':''}" onclick="selecionarBairro(this,'')">📍 Todos</div>`;
+  wrap.innerHTML = '';
+  const todos = document.createElement('div');
+  todos.className = 'chip' + (!bairroAtivo ? ' ativo' : '');
+  todos.textContent = '📍 Todos';
+  todos.onclick = () => selecionarBairro(todos, '');
+  wrap.appendChild(todos);
   bairros.forEach(b => {
     const el = document.createElement('div');
-    el.className = 'chip' + (bairroAtivo===b?' ativo':'');
+    el.className = 'chip' + (bairroAtivo === b ? ' ativo' : '');
     el.onclick = () => selecionarBairro(el, b);
     el.textContent = b;
     wrap.appendChild(el);
@@ -1470,7 +1602,7 @@ function cardHTML(a) {
     ? fts.map((f,i)=>`<img src="${f}" class="${i===0?'ativa':''}">`).join('')
     : `<div class="foto-placeholder">🛒</div>`;
   const dotsInner = fts.length > 1
-    ? `<div class="dots">${fts.map((_,i)=>`<div class="dot ${i===0?'ativa':''}" onclick="trocarFotoCard(event,this.parentElement,${i})"></div>`).join('')}</div>`
+    ? `<div class="dots">${fts.map((_,i)=>`<div class="dot ${i===0?'ativa':''}" data-action="trocarFoto" data-idx="${i}"></div>`).join('')}</div>`
     : '';
   const logoImg = a.logo
     ? `<img class="card-logo-overlay visivel" src="${a.logo}" alt="logo">`
@@ -1507,7 +1639,7 @@ function cardHTML(a) {
   }
 
   return `
-  <div class="card ${classePrio}" onclick="abrirDetalhe('${esc(a.id)}')">
+  <div class="card ${classePrio}" data-action="abrirDetalhe" data-id="${esc(a.id)}">
     <div class="card-header-area">
       <div class="card-fotos">${fotosInner}</div>
       ${dotsInner}
@@ -1525,12 +1657,12 @@ function cardHTML(a) {
       ${horarioHTML(a)}
       <div class="card-desc">${esc(a.descricao)}</div>
       <div class="card-footer">
-        <a class="btn-zap" href="${zapURL}" target="_blank" onclick="event.stopPropagation()">
+        <a class="btn-zap" href="${zapURL}" target="_blank" data-action="zapLink">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
           Falar
         </a>
         <div style="display:flex;align-items:center;gap:6px">
-          <button class="btn-share-card" onclick="event.stopPropagation();abrirCompartilhar('${esc(a.id)}')" title="Compartilhar">
+          <button class="btn-share-card" data-action="compartilharCard" data-id="${esc(a.id)}" title="Compartilhar">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
           </button>
           <span class="tag-cat">${esc((a.categoria||'').split(' ')[0])}</span>
@@ -1625,16 +1757,16 @@ function abrirDetalhe(id) {
     </a>
 
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
-      <button class="btn-share-detalhe" style="margin-bottom:0" onclick="abrirCompartilhar('${esc(a.id)}')">
+      <button class="btn-share-detalhe" style="margin-bottom:0" data-action="compartilharDetalhe" data-id="${esc(a.id)}">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
         Compartilhar
       </button>
-      <button class="btn-share-detalhe" style="margin-bottom:0" onclick="abrirAvaliar('${esc(a.id)}')">
+      <button class="btn-share-detalhe" style="margin-bottom:0" data-action="avaliarDetalhe" data-id="${esc(a.id)}">
         ⭐ Avaliar
       </button>
     </div>
 
-    <button class="btn-share-detalhe" style="margin-bottom:10px" onclick="abrirPerfil('${esc(a.id)}')">
+    <button class="btn-share-detalhe" style="margin-bottom:10px" data-action="perfilDetalhe" data-id="${esc(a.id)}">
       🏪 Ver todos os anúncios deste vendedor
     </button>`;
 
@@ -1886,10 +2018,10 @@ function abrirAdmin() {
         </div>
         <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
           <button class="btn-prio-toggle btn-prio-diario ${prioridadeValida(a.id,Date.now())&&prioridades[a.id]?.tipo==='diario'?'ativo':''}"
-            onclick="ativarPrioridade('${esc(a.id)}','diario')">☀️ Dia</button>
+            data-action="prioDiario" data-id="${esc(a.id)}">☀️ Dia</button>
           <button class="btn-prio-toggle btn-prio-semanal ${prioridadeValida(a.id,Date.now())&&prioridades[a.id]?.tipo==='semanal'?'ativo':''}"
-            onclick="ativarPrioridade('${esc(a.id)}','semanal')">📅 Sem.</button>
-          <button class="btn-excluir" onclick="excluirAnuncio('${esc(a.id)}')">Excluir</button>
+            data-action="prioSemanal" data-id="${esc(a.id)}">📅 Sem.</button>
+          <button class="btn-excluir" data-action="excluir" data-id="${esc(a.id)}">Excluir</button>
         </div>
       </div>`).join('');
   }
@@ -1926,7 +2058,7 @@ function renderizarPrioridades() {
           ${isSemanal?'📅':'☀️'} ${isSemanal?'Semanal':'Diário'} · ⏱ ${tempo}
         </div>
       </div>
-      <button class="btn-prio-remover" onclick="removerPrioridade('${esc(a.id)}')">Remover</button>
+      <button class="btn-prio-remover" data-action="removerPrio" data-id="${esc(a.id)}">Remover</button>
     </div>`;
   }).join('');
 }
@@ -2068,7 +2200,7 @@ function abrirPerfil(refId) {
     const ratingMini = av ? `<span style="font-size:.72rem;color:#F59E0B">⭐ ${av.media.toFixed(1)} (${av.count})</span>` : '';
     const views = visualizacoes[a.id]||0;
     return `
-    <div style="display:flex;gap:10px;align-items:center;padding:10px;background:var(--fundo);border-radius:12px;margin-bottom:8px;cursor:pointer" onclick="fecharPerfil();setTimeout(()=>abrirDetalhe('${esc(a.id)}'),200)">
+    <div style="display:flex;gap:10px;align-items:center;padding:10px;background:var(--fundo);border-radius:12px;margin-bottom:8px;cursor:pointer" data-action="abrirAnuncioPerfil" data-id="${esc(a.id)}">
       ${img}
       <div style="flex:1;min-width:0">
         <div style="font-weight:700;font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(a.nome)}</div>
